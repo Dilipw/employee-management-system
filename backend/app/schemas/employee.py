@@ -57,28 +57,28 @@ class EmployeeCreate(EmployeeBase):
 class EmployeeUpdate(BaseModel):
 
     full_name: Optional[str] = Field(
-        default=None,
+        None,
         min_length=3,
         max_length=100
     )
 
     phone: Optional[str] = Field(
-        default=None,
+        None,
         min_length=10,
         max_length=15
     )
 
     department: Optional[str] = Field(
-        default=None,
+        None,
         max_length=100
     )
 
     designation: Optional[str] = Field(
-        default=None,
+        None,
         max_length=100
     )
 
-
+    is_active: Optional[bool] = None
 class EmployeeResponse(EmployeeBase):
 
     id: int

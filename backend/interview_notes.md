@@ -979,3 +979,362 @@ This step helped build a production-level employee listing API similar to real-w
 - search
 - pagination
 - scalable architecture
+
+# Step 9 - Update Employee API
+
+## What I Did
+
+Implemented:
+- employee update API
+- partial update support
+- protected route
+- employee existence validation
+- reusable update service
+
+---
+
+# API Endpoint
+
+```http
+PUT /employees/{employee_id}
+```
+
+---
+
+# Why Update API Important
+
+This completes:
+```txt
+CRUD -> UPDATE operation
+```
+
+---
+
+# Features Implemented
+
+| Feature | Description |
+|---|---|
+| Partial Update | Update only required fields |
+| Protected Route | JWT authentication required |
+| Validation | Request validation using Pydantic |
+| Soft Delete Check | Deleted employees cannot be updated |
+
+---
+
+# Update Schema Used
+
+## File
+
+```txt
+app/schemas/employee.py
+```
+
+---
+
+## Why Optional Fields Used
+
+Update APIs usually support:
+- partial updates
+- flexible field modification
+
+Example:
+only designation can be updated.
+
+---
+
+# Service Layer Logic
+
+## File
+
+```txt
+app/services/employee_service.py
+```
+
+---
+
+# Dynamic Update Logic
+
+Used:
+
+```python
+setattr()
+```
+
+for dynamic field updates.
+
+Benefits:
+- cleaner code
+- scalable update handling
+- avoids repetitive assignments
+
+---
+
+# Why `exclude_unset=True` Used
+
+Used:
+
+```python
+exclude_unset=True
+```
+
+to update only provided fields.
+
+Without this:
+missing fields may become NULL.
+
+---
+
+# Example Update Request
+
+```json
+{
+  "designation": "Senior Software Developer",
+  "department": "Engineering"
+}
+```
+
+---
+
+# Example Success Response
+
+```json
+{
+  "id": 1,
+  "full_name": "Dilip Waghmare",
+  "department": "Engineering",
+  "designation": "Senior Software Developer"
+}
+```
+
+---
+
+# Authentication Used
+
+Protected using:
+```python
+get_current_employee
+```
+
+Only authenticated users can update employee records.
+
+---
+
+# Exception Handling
+
+| Status Code | Purpose |
+|---|---|
+| 404 | Employee not found |
+| 401 | Unauthorized |
+| 200 | Update successful |
+
+---
+
+# Production-Level Improvements
+
+- partial update support
+- dynamic field handling
+- reusable service layer
+- protected API
+- validation handling
+
+---
+
+# Important Learning
+
+This step helped me understand:
+- update API architecture
+- partial update handling
+- dynamic ORM updates
+- scalable update patterns
+- protected update APIs
+
+---
+
+# Overall Learning From This Step
+
+This step helped implement a production-level employee update system with reusable and scalable backend architecture.
+
+# Step 10 - Soft Delete Employee API
+
+## What I Did
+
+Implemented:
+- employee delete API
+- soft delete architecture
+- protected delete route
+- safe deletion handling
+
+---
+
+# API Endpoint
+
+```http
+DELETE /employees/{employee_id}
+```
+
+---
+
+# Why Soft Delete Used
+
+Instead of permanently deleting records:
+
+```python
+is_deleted = True
+```
+
+was used.
+
+---
+
+# Benefits Of Soft Delete
+
+- recover deleted data
+- maintain audit/history
+- safer than hard delete
+- prevents accidental data loss
+
+---
+
+# Service Layer Logic
+
+## File
+
+```txt
+app/services/employee_service.py
+```
+
+---
+
+# Soft Delete Flow
+
+```txt
+Delete Request
+      ↓
+Find Employee
+      ↓
+Set is_deleted = True
+      ↓
+Commit Changes
+```
+
+---
+
+# Why Hard Delete Avoided
+
+Hard delete permanently removes data from database.
+
+Soft delete is safer and commonly used in production systems.
+
+---
+
+# Protected Route
+
+Protected using:
+```python
+get_current_employee
+```
+
+Only authenticated users can delete employees.
+
+---
+
+# Example Success Response
+
+```json
+{
+  "message": "Employee deleted successfully"
+}
+```
+
+---
+
+# Soft Delete Filtering
+
+All employee listing APIs automatically exclude deleted employees using:
+
+```python
+Employee.is_deleted == False
+```
+
+---
+
+# Exception Handling
+
+| Status Code | Purpose |
+|---|---|
+| 404 | Employee not found |
+| 401 | Unauthorized |
+| 200 | Delete successful |
+
+---
+
+# Production-Level Improvements
+
+- safe deletion strategy
+- protected delete APIs
+- reusable service layer
+- soft delete filtering
+- scalable delete architecture
+
+---
+
+# Important Learning
+
+This step helped me understand:
+- soft delete architecture
+- safe deletion patterns
+- scalable delete strategies
+- protected delete APIs
+
+---
+
+# Overall Learning From This Step
+
+This step helped implement a safe and production-level deletion strategy commonly used in enterprise backend systems.
+
+# Final Project Features
+
+## Backend Features Implemented
+
+- Employee Registration
+- JWT Login Authentication
+- Protected Routes
+- Get Logged-in Employee
+- Employee Listing API
+- Search & Filtering
+- Pagination
+- Update Employee
+- Soft Delete Employee
+- Swagger Documentation
+- Environment Variables
+- SQLAlchemy ORM
+- Exception Handling
+- Service Layer Architecture
+
+---
+
+# Technologies Used
+
+| Technology | Purpose |
+|---|---|
+| FastAPI | Backend Framework |
+| MySQL | Database |
+| SQLAlchemy | ORM |
+| JWT | Authentication |
+| Pydantic | Validation |
+| Swagger | API Testing |
+| Uvicorn | ASGI Server |
+
+---
+
+# Overall Learning From Project
+
+This project helped me understand:
+- FastAPI architecture
+- JWT authentication
+- scalable backend structure
+- ORM database interaction
+- protected API development
+- pagination & filtering
+- service layer architecture
+- production-level API development

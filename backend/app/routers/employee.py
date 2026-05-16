@@ -17,13 +17,16 @@ from app.schemas.employee import (
     EmployeeResponse,
     EmployeeLogin,
     TokenResponse,
+    EmployeeUpdate,
     EmployeeListResponse
 )
 
 from app.services.employee_service import (
     register_employee_service,
     login_employee_service,
-    get_employees_service
+    get_employees_service,
+    update_employee_service,
+    delete_employee_service
 )
 
 from app.auth.auth_bearer import (
@@ -110,4 +113,41 @@ def get_employees(
         limit=limit,
         search=search,
         department=department
+    )
+
+@router.put(
+    "/{employee_id}",
+    response_model=EmployeeResponse,
+    status_code=status.HTTP_200_OK
+)
+def update_employee(
+    employee_id: int,
+    employee: EmployeeUpdate,
+    db: Session = Depends(get_db),
+    current_employee: Employee = Depends(
+        get_current_employee
+    )
+):
+
+    return update_employee_service(
+        employee_id,
+        employee,
+        db
+    )
+
+@router.delete(
+    "/{employee_id}",
+    status_code=status.HTTP_200_OK
+)
+def delete_employee(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    current_employee: Employee = Depends(
+        get_current_employee
+    )
+):
+
+    return delete_employee_service(
+        employee_id,
+        db
     )

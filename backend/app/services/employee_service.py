@@ -5,11 +5,17 @@ from sqlalchemy import or_
 from sqlalchemy import or_
 
 from app.models.employee import Employee
-from app.schemas.employee import EmployeeCreate
+
 from app.utils.security import (
     hash_password,
     verify_password
 )
+
+from app.schemas.employee import (
+    EmployeeCreate,
+    EmployeeUpdate
+)
+
 from app.auth.jwt_handler import create_access_token
 
 
@@ -123,4 +129,57 @@ def get_employees_service(
         "page": page,
         "limit": limit,
         "data": employees
+    }
+
+def update_employee_service(
+    employee_id: int,
+    employee_data: EmployeeUpdate,
+    db: Session
+):
+
+    employee = db.query(Employee).filter(
+        Employee.id == employee_id,
+        Employee.is_deleted == False
+    ).first()
+
+    if not employee:
+        raise HTTPException(
+            status_code=404,
+            detail="Employee not found"
+        )
+
+    update_data = employee_data.model_dump(
+        exclude_unset=True
+    )
+
+    for key, value in update_data.items():
+        setattr(employee, key, value)
+
+    db.commit()
+    db.refresh(employee)
+
+    return employee
+
+def delete_employee_service(
+    employee_id: int,
+    db: Session
+):
+
+    employee = db.query(Employee).filter(
+        Employee.id == employee_id,
+        Employee.is_deleted == False
+    ).first()
+
+    if not employee:
+        raise HTTPException(
+            status_code=404,
+            detail="Employee not found"
+        )
+
+    employee.is_deleted = True
+
+    db.commit()
+
+    return {
+        "message": "Employee deleted successfully"
     }
