@@ -421,3 +421,101 @@ git commit -m "Setup FastAPI application and verified API server"
 git add .
 git commit -m "Implemented production-ready MySQL and SQLAlchemy configuration"
 ```
+
+# Step 5 - Pydantic Schemas & Request Validation
+
+## Objective
+
+Implement request validation and response serialization using Pydantic schemas.
+
+---
+
+## What I Implemented
+
+- Created reusable schema architecture
+- Added request validation schemas
+- Implemented secure response schemas
+- Configured email validation
+- Added update schema support
+- Prevented sensitive data exposure
+
+---
+
+## Schema Architecture
+
+### EmployeeBase
+Contains reusable common fields.
+
+### EmployeeCreate
+Used during employee registration.
+
+### EmployeeUpdate
+Supports partial update operations.
+
+### EmployeeResponse
+Used for API responses without exposing sensitive fields.
+
+---
+
+## Why Pydantic Schemas
+
+Pydantic helps:
+- Validate incoming request data
+- Serialize API responses
+- Enforce data types
+- Improve API reliability
+- Reduce manual validation logic
+
+---
+
+## Email Validation
+
+Used:
+
+```python
+EmailStr
+```
+
+This validates email format automatically.
+
+---
+
+## Security Improvement
+
+Password field was intentionally excluded from response schemas.
+
+This prevents:
+- Sensitive data exposure
+- Security vulnerabilities
+- Accidental password leaks
+
+---
+
+## ORM to Schema Conversion
+
+Configured:
+
+```python
+from_attributes = True
+```
+
+This enables automatic conversion from SQLAlchemy ORM objects to Pydantic response models.
+
+---
+
+## Learning Outcome
+
+- Learned Pydantic schema design
+- Implemented request validation
+- Understood response serialization
+- Improved API security practices
+- Structured reusable schema architecture
+
+---
+
+## Git Commit Command
+
+```bash
+git add .
+git commit -m "Implemented Pydantic schemas and request validation"
+```

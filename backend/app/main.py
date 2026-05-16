@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.database import Base, engine
+from app.models.employee import Employee
 
 app = FastAPI(
     title="Employee Management API",
