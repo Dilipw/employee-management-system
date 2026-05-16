@@ -1,13 +1,9 @@
+import DashboardPage from "./pages/DashboardPage"
+
 function App() {
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-
-      <h1 className="text-4xl font-bold text-blue-600">
-        Tailwind v4 Working 🚀
-      </h1>
-
-    </div>
+    <DashboardPage />
   )
 }
 
