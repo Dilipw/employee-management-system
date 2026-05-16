@@ -6,6 +6,9 @@ from pydantic import EmailStr
 from pydantic import Field
 from pydantic import ConfigDict
 
+from typing import List
+
+
 
 class EmployeeBase(BaseModel):
 
@@ -97,3 +100,11 @@ class EmployeeLogin(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
+class EmployeeListResponse(BaseModel):
+
+    total: int
+    page: int
+    limit: int
+
+    data: List[EmployeeResponse]

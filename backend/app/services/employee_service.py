@@ -1,5 +1,8 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
+
+from sqlalchemy import or_
 
 from app.models.employee import Employee
 from app.schemas.employee import EmployeeCreate
@@ -76,4 +79,48 @@ def login_employee_service(
     return {
         "access_token": access_token,
         "token_type": "bearer"
+    }
+
+def get_employees_service(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str = None,
+    department: str = None
+):
+
+    query = db.query(Employee).filter(
+        Employee.is_deleted == False
+    )
+
+    # Search
+    if search:
+
+        query = query.filter(
+            or_(
+                Employee.full_name.ilike(f"%{search}%"),
+                Employee.email.ilike(f"%{search}%")
+            )
+        )
+
+    # Department Filter
+    if department:
+
+        query = query.filter(
+            Employee.department == department
+        )
+
+    # Total Count
+    total = query.count()
+
+    # Pagination
+    offset = (page - 1) * limit
+
+    employees = query.offset(offset).limit(limit).all()
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "data": employees
     }
