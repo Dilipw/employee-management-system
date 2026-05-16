@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
+from app.auth.auth_bearer import get_current_employee
+from app.models.employee import Employee
 
 from sqlalchemy.orm import Session
 
@@ -55,3 +57,15 @@ def login_employee(
         employee.password,
         db
     )
+
+@router.get(
+    "/me",
+    response_model=EmployeeResponse
+)
+def get_logged_in_employee(
+    current_employee: Employee = Depends(
+        get_current_employee
+    )
+):
+
+    return current_employee
