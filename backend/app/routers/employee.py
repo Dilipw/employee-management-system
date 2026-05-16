@@ -1,17 +1,22 @@
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import status
 
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.employee import Employee
+
 from app.schemas.employee import (
     EmployeeCreate,
-    EmployeeResponse
+    EmployeeResponse,
+    EmployeeLogin,
+    TokenResponse
 )
-from app.utils.security import hash_password
+
+from app.services.employee_service import (
+    register_employee_service,
+    login_employee_service
+)
 
 router = APIRouter(
     prefix="/employees",
@@ -29,29 +34,24 @@ def register_employee(
     db: Session = Depends(get_db)
 ):
 
-    # Check existing email
-    existing_employee = db.query(Employee).filter(
-        Employee.email == employee.email
-    ).first()
-
-    if existing_employee:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already registered"
-        )
-
-    # Create employee
-    new_employee = Employee(
-        full_name=employee.full_name,
-        email=employee.email,
-        phone=employee.phone,
-        department=employee.department,
-        designation=employee.designation,
-        password=hash_password(employee.password)
+    return register_employee_service(
+        employee,
+        db
     )
 
-    db.add(new_employee)
-    db.commit()
-    db.refresh(new_employee)
 
-    return new_employee
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK
+)
+def login_employee(
+    employee: EmployeeLogin,
+    db: Session = Depends(get_db)
+):
+
+    return login_employee_service(
+        employee.email,
+        employee.password,
+        db
+    )

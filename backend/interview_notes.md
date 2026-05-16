@@ -677,3 +677,430 @@ This enables automatic conversion from SQLAlchemy ORM objects to Pydantic respon
 git add .
 git commit -m "Implemented secure Pydantic schemas and request validation"
 ```
+# Step 6 - Employee Registration API Implementation
+
+## Objective
+
+Implement a secure and production-level employee registration system using FastAPI, SQLAlchemy ORM, Pydantic validation, and password hashing.
+
+The main goal of this step was to create a scalable registration workflow with proper validation, security practices, exception handling, and clean architecture.
+
+---
+
+# Features Implemented
+
+- Employee Registration API
+- Password Hashing using bcrypt
+- Request Validation using Pydantic
+- Duplicate Email Validation
+- SQLAlchemy ORM Database Insertion
+- Secure API Response Structure
+- Service Layer Architecture
+- Dependency Injection
+- Proper HTTP Status Codes
+- Production-Level Project Structure
+
+---
+
+# API Endpoint
+
+## Register Employee
+
+```http
+POST /employees/register
+```
+
+---
+
+# Request Payload Example
+
+```json
+{
+  "full_name": "Dilip Waghmare",
+  "email": "dilip@example.com",
+  "phone": "9876543210",
+  "department": "IT",
+  "designation": "Software Developer",
+  "password": "password123"
+}
+```
+
+---
+
+# Success Response Example
+
+```json
+{
+  "id": 1,
+  "full_name": "Dilip Waghmare",
+  "email": "dilip@example.com",
+  "phone": "9876543210",
+  "department": "IT",
+  "designation": "Software Developer",
+  "is_active": true,
+  "created_at": "2026-05-17T10:00:00",
+  "updated_at": "2026-05-17T10:00:00"
+}
+```
+
+---
+
+# Architecture Used
+
+## Production-Level Layer Separation
+
+| Layer | Responsibility |
+|---|---|
+| Router | API request and response handling |
+| Service | Business logic implementation |
+| Schema | Validation and serialization |
+| Model | Database structure |
+| Utils | Reusable helper functions |
+| Auth | JWT token handling |
+
+---
+
+# Folder Structure
+
+```txt
+app/
+│
+├── routers/
+│   └── employee.py
+│
+├── services/
+│   └── employee_service.py
+│
+├── schemas/
+│   └── employee.py
+│
+├── models/
+│   └── employee.py
+│
+├── utils/
+│   └── security.py
+│
+├── auth/
+│   └── jwt_handler.py
+```
+
+---
+
+# Why Service Layer Was Used
+
+Instead of placing all logic inside route handlers, a dedicated service layer was created.
+
+## Benefits
+
+- Cleaner route handlers
+- Better maintainability
+- Easier scalability
+- Improved code reusability
+- Easier unit testing
+- Better separation of concerns
+
+---
+
+# Password Security
+
+## Password Hashing
+
+Passwords are never stored in plain text.
+
+Used:
+
+```python
+bcrypt
+```
+
+via:
+
+```python
+passlib.context.CryptContext
+```
+
+---
+
+# Password Flow
+
+```txt
+User Password
+        ↓
+Hash Password Function
+        ↓
+Encrypted Hashed Password
+        ↓
+Stored in Database
+```
+
+---
+
+# Why Password Hashing Is Important
+
+Password hashing helps:
+- Prevent password leaks
+- Improve authentication security
+- Protect user credentials
+- Follow industry security standards
+
+---
+
+# Validation Architecture
+
+## Schema Validation
+
+Validation handled using Pydantic schemas.
+
+### Examples
+
+```python
+EmailStr
+```
+
+Used for automatic email validation.
+
+```python
+Field(min_length=6)
+```
+
+Used for password validation.
+
+---
+
+# Validation Types Used
+
+## 1. Request Validation
+
+Handled by Pydantic:
+- required fields
+- email validation
+- string length validation
+- datatype validation
+
+---
+
+## 2. Business Logic Validation
+
+Handled manually in service layer:
+- duplicate email checking
+- employee existence validation
+
+---
+
+# Duplicate Email Validation
+
+Before inserting employee:
+
+```python
+existing_employee = db.query(Employee).filter(
+    Employee.email == employee.email
+).first()
+```
+
+If email already exists:
+
+```python
+raise HTTPException(
+    status_code=400,
+    detail="Email already registered"
+)
+```
+
+---
+
+# Why Duplicate Validation Important
+
+Prevents:
+- multiple accounts using same email
+- authentication conflicts
+- inconsistent user data
+
+---
+
+# SQLAlchemy ORM Usage
+
+Used SQLAlchemy ORM for database interaction.
+
+## Benefits
+
+- Cleaner code
+- Reduced raw SQL queries
+- Object-oriented database handling
+- Easier scalability
+- Better maintainability
+
+---
+
+# Database Flow
+
+```txt
+Request
+   ↓
+Pydantic Validation
+   ↓
+Service Layer Logic
+   ↓
+SQLAlchemy ORM
+   ↓
+MySQL Database
+```
+
+---
+
+# Dependency Injection
+
+Used:
+
+```python
+Depends(get_db)
+```
+
+---
+
+# Why Dependency Injection
+
+Benefits:
+- reusable database sessions
+- cleaner architecture
+- easier testing
+- reduced code duplication
+
+---
+
+# Exception Handling
+
+Used:
+
+```python
+HTTPException
+```
+
+---
+
+# HTTP Status Codes Used
+
+| Status Code | Purpose |
+|---|---|
+| 201 | Employee created successfully |
+| 400 | Duplicate email |
+| 422 | Validation error |
+
+---
+
+# Response Serialization
+
+Response model:
+
+```python
+response_model=EmployeeResponse
+```
+
+---
+
+# Why Response Models Important
+
+Response models help:
+- hide sensitive fields
+- standardize API responses
+- improve frontend integration
+- improve API documentation
+
+---
+
+# Security Improvement
+
+Password field intentionally excluded from response schema.
+
+This prevents:
+- accidental password exposure
+- API security vulnerabilities
+
+---
+
+# Swagger Documentation
+
+FastAPI automatically generated Swagger/OpenAPI documentation.
+
+### Swagger URL
+
+```txt
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# Production-Level Improvements Implemented
+
+## Implemented
+
+- Modular architecture
+- Service layer pattern
+- Password hashing
+- Validation schemas
+- ORM database interaction
+- Environment-based configuration
+- Dependency injection
+- Secure response serialization
+
+---
+
+# Challenges Faced
+
+## Module Import Issue
+
+Initially faced:
+
+```txt
+ModuleNotFoundError: No module named 'app'
+```
+
+### Resolution
+
+- Created proper package structure
+- Added `__init__.py`
+- Corrected module imports
+
+---
+
+# Learning Outcome
+
+During this step I learned:
+
+- FastAPI route creation
+- Pydantic validation architecture
+- SQLAlchemy ORM insertion flow
+- Password hashing implementation
+- Service layer architecture
+- Dependency injection
+- Response serialization
+- Exception handling
+- REST API standards
+
+---
+
+# Why This Step Is Important
+
+This step established the complete foundation for:
+- authentication system
+- secure user management
+- future CRUD operations
+- protected routes
+- scalable API architecture
+
+---
+
+# Git Commit Commands
+
+## Registration API Commit
+
+```bash
+git add .
+git commit -m "Implemented employee registration API with validation and password hashing"
+```
+
+## Service Layer Refactor Commit
+
+```bash
+git add .
+git commit -m "Refactored employee registration using service layer architecture"
+```

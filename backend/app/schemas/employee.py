@@ -86,3 +86,14 @@ class EmployeeResponse(EmployeeBase):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+# Login Schema
+class EmployeeLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+# Token Response Schema
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
