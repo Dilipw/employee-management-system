@@ -2,7 +2,6 @@ from fastapi import FastAPI
 
 app = FastAPI(
     title="Employee Management API",
-    description="FastAPI based Employee Management System",
     version="1.0.0"
 )
 
