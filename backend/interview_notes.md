@@ -421,95 +421,97 @@ git commit -m "Setup FastAPI application and verified API server"
 git add .
 git commit -m "Implemented production-ready MySQL and SQLAlchemy configuration"
 ```
-
-# Step 5 - Pydantic Schemas & Request Validation
+# Step 4 - Employee ORM Model Creation
 
 ## Objective
 
-Implement request validation and response serialization using Pydantic schemas.
+Create Employee database model using SQLAlchemy ORM with production-level structure and soft delete support.
 
 ---
 
 ## What I Implemented
 
-- Created reusable schema architecture
-- Added request validation schemas
-- Implemented secure response schemas
-- Configured email validation
-- Added update schema support
-- Prevented sensitive data exposure
+- Created Employee ORM model
+- Configured employees table
+- Added primary key and unique constraints
+- Implemented soft delete support
+- Added automatic timestamp handling
+- Enabled ORM-based table creation
 
 ---
 
-## Schema Architecture
+## File Structure
 
-### EmployeeBase
-Contains reusable common fields.
-
-### EmployeeCreate
-Used during employee registration.
-
-### EmployeeUpdate
-Supports partial update operations.
-
-### EmployeeResponse
-Used for API responses without exposing sensitive fields.
-
----
-
-## Why Pydantic Schemas
-
-Pydantic helps:
-- Validate incoming request data
-- Serialize API responses
-- Enforce data types
-- Improve API reliability
-- Reduce manual validation logic
-
----
-
-## Email Validation
-
-Used:
-
-```python
-EmailStr
+```txt
+app/
+│
+├── models/
+│   ├── __init__.py
+│   └── employee.py
 ```
 
-This validates email format automatically.
-
 ---
 
-## Security Improvement
+## ORM Features Implemented
 
-Password field was intentionally excluded from response schemas.
+### Primary Key
+Used auto-increment integer primary key for employee identification.
 
-This prevents:
-- Sensitive data exposure
-- Security vulnerabilities
-- Accidental password leaks
+### Unique Email Constraint
+Configured unique email validation at database level to prevent duplicate accounts.
 
----
-
-## ORM to Schema Conversion
-
-Configured:
+### Soft Delete Support
+Implemented:
 
 ```python
-from_attributes = True
+is_deleted = Column(Boolean, default=False)
 ```
 
-This enables automatic conversion from SQLAlchemy ORM objects to Pydantic response models.
+Instead of permanently deleting records, the system marks records as deleted.
+
+### Timestamp Management
+
+Implemented:
+- `created_at`
+- `updated_at`
+
+using:
+
+```python
+func.now()
+```
+
+for automatic timestamp handling.
+
+---
+
+## Why Soft Delete
+
+Soft delete provides:
+- Better data recovery
+- Safer deletion operations
+- Historical record maintenance
+- Audit support
+
+---
+
+## Why SQLAlchemy ORM
+
+SQLAlchemy ORM helps:
+- Reduce raw SQL usage
+- Improve maintainability
+- Provide object-oriented DB interaction
+- Improve scalability
 
 ---
 
 ## Learning Outcome
 
-- Learned Pydantic schema design
-- Implemented request validation
-- Understood response serialization
-- Improved API security practices
-- Structured reusable schema architecture
+- Learned ORM model creation
+- Understood DB constraints
+- Implemented soft delete architecture
+- Configured automatic timestamps
+- Built production-ready table structure
 
 ---
 
@@ -517,5 +519,161 @@ This enables automatic conversion from SQLAlchemy ORM objects to Pydantic respon
 
 ```bash
 git add .
-git commit -m "Implemented Pydantic schemas and request validation"
+git commit -m "Created Employee ORM model with soft delete support"
+```
+
+# Step 5 - Pydantic Schemas & Request Validation
+
+## Objective
+
+Implement secure and structured request validation using Pydantic schemas for employee-related API operations.
+
+---
+
+## What I Implemented
+
+- Created reusable Pydantic schemas
+- Added request validation rules
+- Configured secure response serialization
+- Implemented email validation
+- Added password validation constraints
+- Prevented sensitive data exposure in API responses
+
+---
+
+## File Structure
+
+```txt
+app/
+│
+├── schemas/
+│   ├── __init__.py
+│   └── employee.py
+```
+
+---
+
+## Schema Architecture
+
+### EmployeeBase
+Contains reusable common employee fields.
+
+### EmployeeCreate
+Used during employee registration.
+
+### EmployeeUpdate
+Handles employee update requests with optional fields.
+
+### EmployeeResponse
+Used for API responses while excluding sensitive information like passwords.
+
+---
+
+## Validation Rules Implemented
+
+| Field | Validation |
+|---|---|
+| full_name | Minimum 3 characters |
+| email | Valid email format |
+| phone | Minimum 10 and maximum 15 characters |
+| password | Minimum 6 characters |
+
+---
+
+## Validation Approach
+
+Used Pydantic `Field()` validations for:
+- input sanitization
+- required field validation
+- minimum and maximum length checks
+- API documentation descriptions
+
+Example:
+
+```python
+password: str = Field(
+    ...,
+    min_length=6,
+    max_length=100
+)
+```
+
+---
+
+## Email Validation
+
+Implemented:
+
+```python
+EmailStr
+```
+
+This automatically validates:
+- valid email format
+- malformed email inputs
+
+---
+
+## Response Security
+
+Password field was intentionally excluded from the response schema.
+
+### Reason
+- Prevent sensitive data exposure
+- Improve API security
+- Follow production-level security standards
+
+---
+
+## Why Separate Schemas Were Used
+
+Separate schemas improve:
+- code maintainability
+- API consistency
+- request validation clarity
+- response security
+- scalability
+
+---
+
+## ORM Compatibility
+
+Configured:
+
+```python
+model_config = ConfigDict(
+    from_attributes=True
+)
+```
+
+This enables automatic conversion from SQLAlchemy ORM objects to Pydantic response models.
+
+---
+
+## Why This Approach Is Production-Friendly
+
+- Centralized validation logic
+- Cleaner API contracts
+- Reduced manual validation code
+- Better frontend integration
+- Improved API reliability
+- Secure response handling
+
+---
+
+## Learning Outcome
+
+- Learned Pydantic schema architecture
+- Implemented request validation
+- Applied secure response serialization
+- Improved API input validation
+- Structured reusable validation logic
+
+---
+
+## Git Commit Command
+
+```bash
+git add .
+git commit -m "Implemented secure Pydantic schemas and request validation"
 ```
