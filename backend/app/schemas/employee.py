@@ -24,20 +24,20 @@ class EmployeeBase(BaseModel):
         description="Employee email address"
     )
 
-    phone: Optional[str] = Field(
+    phone: str = Field(
         ...,
         min_length=10,
         max_length=15,
         description="Employee phone number"
     )
 
-    department: Optional[str] = Field(
+    department: str = Field(
         ...,
         max_length=100,
         description="Employee department"
     )
 
-    designation: Optional[str] = Field(
+    designation: str = Field(
         ...,
         max_length=100,
         description="Employee designation"
@@ -56,7 +56,7 @@ class EmployeeCreate(EmployeeBase):
 
 class EmployeeUpdate(BaseModel):
 
-    full_name: Optional[str] = Field(
+    full_name: str = Field(
         None,
         min_length=3,
         max_length=100
@@ -65,18 +65,18 @@ class EmployeeUpdate(BaseModel):
         None,
         description="Employee email address"
     )
-    phone: Optional[str] = Field(
+    phone: str = Field(
         None,
         min_length=10,
         max_length=15
     )
 
-    department: Optional[str] = Field(
+    department: str = Field(
         None,
         max_length=100
     )
 
-    designation: Optional[str] = Field(
+    designation: str = Field(
         None,
         max_length=100
     )
