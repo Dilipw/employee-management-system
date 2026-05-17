@@ -35,6 +35,10 @@ function EmployeesPage() {
     const [updateLoading, setUpdateLoading] =
         useState(false)
 
+    const [search, setSearch] = useState("")
+
+    const [department, setDepartment] =
+        useState("")
 
     const fetchEmployees =
         async () => {
@@ -48,7 +52,9 @@ function EmployeesPage() {
                 const response =
                     await getEmployees(
                         page,
-                        limit
+                        limit,
+                        search,
+                        department
                     )
 
                 setEmployees(response.data)
@@ -73,7 +79,11 @@ function EmployeesPage() {
 
         fetchEmployees()
 
-    }, [page])
+    }, [
+        page,
+        search,
+        department
+    ])
 
     const handleDelete =
         async (employeeId) => {
@@ -163,7 +173,84 @@ function EmployeesPage() {
                     </div>
 
                 </div>
+                {/* Filters */}
+                <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-6">
 
+                    <div className="grid md:grid-cols-2 gap-5">
+
+
+                        {/* Search */}
+                        <div>
+
+                            <label className="block text-sm font-semibold text-slate-600 mb-3">
+
+                                Search Employee
+
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Search by name or email"
+                                value={search}
+                                onChange={(e) => {
+
+                                    setPage(1)
+
+                                    setSearch(e.target.value)
+                                }}
+                                className="w-full border border-slate-300 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                            />
+
+                        </div>
+
+
+                        {/* Department Filter */}
+                        <div>
+
+                            <label className="block text-sm font-semibold text-slate-600 mb-3">
+
+                                Filter By Department
+
+                            </label>
+
+                            <select
+                                value={department}
+                                onChange={(e) => {
+
+                                    setPage(1)
+
+                                    setDepartment(e.target.value)
+                                }}
+                                className="w-full border border-slate-300 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                            >
+
+                                <option value="">
+                                    All Departments
+                                </option>
+
+                                <option value="IT">
+                                    IT
+                                </option>
+
+                                <option value="HR">
+                                    HR
+                                </option>
+
+                                <option value="Finance">
+                                    Finance
+                                </option>
+
+                                <option value="Marketing">
+                                    Marketing
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
                 {/* Error */}
                 {
@@ -298,7 +385,21 @@ function EmployeesPage() {
                                                         className="p-10 text-center text-slate-500"
                                                     >
 
-                                                        No employees found
+                                                        <div className="flex flex-col items-center justify-center py-10">
+
+                                                            <h3 className="text-2xl font-bold text-slate-700 mb-3">
+
+                                                                No Employees Found
+
+                                                            </h3>
+
+                                                            <p className="text-slate-500">
+
+                                                                Try adjusting search or filter criteria.
+
+                                                            </p>
+
+                                                        </div>
 
                                                     </td>
 
@@ -318,35 +419,57 @@ function EmployeesPage() {
 
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-5">
 
-                    <p className="text-slate-500">
+                    <div>
 
-                        Total Employees: {total}
+                        <p className="text-slate-500 font-medium">
 
-                    </p>
+                            Showing page {page}
+
+                            {" "}of{" "}
+
+                            {Math.ceil(total / limit)}
+
+                        </p>
+
+                        <p className="text-slate-400 text-sm mt-1">
+
+                            Total Employees: {total}
+
+                        </p>
+
+                    </div>
 
 
-                    <div className="flex gap-3">
+                    <div className="flex items-center gap-4">
 
                         <button
                             onClick={() =>
                                 setPage(page - 1)
                             }
                             disabled={page === 1}
-                            className="px-5 py-2 rounded-xl bg-slate-200 disabled:opacity-50"
+                            className="px-6 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 transition disabled:opacity-50"
                         >
                             Previous
                         </button>
+
+
+                        <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg">
+
+                            {page}
+
+                        </div>
+
 
                         <button
                             onClick={() =>
                                 setPage(page + 1)
                             }
                             disabled={
-                                page * limit >= total
+                                page >= Math.ceil(total / limit)
                             }
-                            className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white disabled:opacity-50"
+                            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:opacity-90 transition disabled:opacity-50"
                         >
                             Next
                         </button>
