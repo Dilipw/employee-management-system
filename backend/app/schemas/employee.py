@@ -61,7 +61,10 @@ class EmployeeUpdate(BaseModel):
         min_length=3,
         max_length=100
     )
-
+    email: Optional[EmailStr] = Field(
+        None,
+        description="Employee email address"
+    )
     phone: Optional[str] = Field(
         None,
         min_length=10,
@@ -79,6 +82,7 @@ class EmployeeUpdate(BaseModel):
     )
 
     is_active: Optional[bool] = None
+
 class EmployeeResponse(EmployeeBase):
 
     id: int
@@ -111,6 +115,14 @@ class EmployeeListResponse(BaseModel):
 
 class ChangePasswordSchema(BaseModel):
 
-    current_password: str
+    current_password: str = Field(
+        ...,
+        min_length=6,
+        max_length=100
+    )
 
-    new_password: str
+    new_password: str = Field(
+        ...,
+        min_length=6,
+        max_length=100
+    )
