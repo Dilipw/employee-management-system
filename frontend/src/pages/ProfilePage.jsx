@@ -1,728 +1,390 @@
-import {
-    useState
-} from "react"
-
+import { useState, useEffect, useCallback } from "react"
 import MainLayout from "../layouts/MainLayout"
+import { useAuth } from "../context/AuthContext"
+import { updateMyProfile, changePassword } from "../services/employeeService"
 
-import {
-    useAuth
-} from "../context/AuthContext"
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function Toast({ message, type, onClose }) {
+    useEffect(() => {
+        const t = setTimeout(onClose, 3500)
+        return () => clearTimeout(t)
+    }, [onClose])
 
-import {
-    updateMyProfile,
-    changePassword
-} from "../services/employeeService"
+    const ok = type === "success"
+    return (
+        <div className="fixed top-5 right-5 z-[100]">
+            <div
+                className={[
+                    "flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl min-w-72 max-w-sm",
+                    ok ? "bg-emerald-600 text-white" : "bg-red-600 text-white",
+                ].join(" ")}
+            >
+                <span className="text-xl mt-0.5">{ok ? "✓" : "✕"}</span>
+                <div className="flex-1">
+                    <p className="font-semibold text-sm">{ok ? "Success" : "Error"}</p>
+                    <p className="text-xs opacity-90 mt-0.5">{message}</p>
+                </div>
+                <button
+                    onClick={onClose}
+                    className="opacity-70 hover:opacity-100 text-lg leading-none mt-0.5 cursor-pointer"
+                >
+                    ×
+                </button>
+            </div>
+        </div>
+    )
+}
 
+// ─── Reusable Field ───────────────────────────────────────────────────────────
+function Field({ label, error, required, children }) {
+    return (
+        <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-slate-600">
+                {label}
+                {required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            {children}
+            {error && <p className="text-red-500 text-xs">{error}</p>}
+        </div>
+    )
+}
 
+// ─── Password Field with show/hide toggle ─────────────────────────────────────
+function PasswordField({ label, placeholder, value, onChange, error }) {
+    const [show, setShow] = useState(false)
+    return (
+        <Field label={label} error={error} required>
+            <div className="relative">
+                <input
+                    type={show ? "text" : "password"}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
+                    className="w-full border border-slate-300 rounded-xl px-4 py-3 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent transition bg-white"
+                />
+                <button
+                    type="button"
+                    onClick={() => setShow((s) => !s)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition cursor-pointer text-lg leading-none"
+                    tabIndex={-1}
+                >
+                    {show ? "🙈" : "👁️"}
+                </button>
+            </div>
+        </Field>
+    )
+}
+
+const INPUT_CLS =
+    "w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition bg-white"
+
+const DEPARTMENTS = ["IT", "HR", "Finance", "Marketing"]
+
+// ─── Validation helpers ───────────────────────────────────────────────────────
+function validateProfile(data) {
+    const errors = {}
+    if (!data.full_name?.trim()) errors.full_name = "Full name is required"
+    if (!data.email?.trim()) {
+        errors.email = "Email is required"
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
+        errors.email = "Invalid email address"
+    }
+    if (!data.phone?.trim()) {
+        errors.phone = "Phone number is required"
+    } else if (!/^\d{10}$/.test(data.phone.trim())) {
+        errors.phone = "Phone must be exactly 10 digits"
+    }
+    if (!data.department?.trim()) errors.department = "Department is required"
+    if (!data.designation?.trim()) errors.designation = "Designation is required"
+    return errors
+}
+
+function validatePassword(data) {
+    const errors = {}
+    if (!data.current_password) errors.current_password = "Current password is required"
+    if (!data.new_password) {
+        errors.new_password = "New password is required"
+    } else if (data.new_password.length < 6) {
+        errors.new_password = "Password must be at least 6 characters"
+    }
+    if (!data.confirm_password) {
+        errors.confirm_password = "Please confirm your new password"
+    } else if (data.new_password !== data.confirm_password) {
+        errors.confirm_password = "Passwords do not match"
+    }
+    return errors
+}
+
+// ─── Avatar initials ──────────────────────────────────────────────────────────
+function Avatar({ name }) {
+    const initials = name
+        ? name.trim().split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
+        : "?"
+    return (
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/20 flex items-center justify-center text-white text-2xl sm:text-3xl font-black flex-shrink-0 border-2 border-white/30 shadow-inner">
+            {initials}
+        </div>
+    )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 function ProfilePage() {
+    const { user } = useAuth()
 
-    const {
-        user
-    } = useAuth()
+    const [profileData, setProfileData] = useState({
+        full_name: user?.full_name || "",
+        email: user?.email || "",
+        phone: user?.phone || "",
+        department: user?.department || "",
+        designation: user?.designation || "",
+    })
 
+    const [passwordData, setPasswordData] = useState({
+        current_password: "",
+        new_password: "",
+        confirm_password: "",
+    })
 
-    // Profile State
-    const [profileData, setProfileData] =
-        useState({
-            full_name: user?.full_name || "",
-            email: user?.email || "",
-            phone: user?.phone || "",
-            department: user?.department || "",
-            designation: user?.designation || ""
-        })
+    const [profileErrors, setProfileErrors] = useState({})
+    const [passwordErrors, setPasswordErrors] = useState({})
+    const [profileLoading, setProfileLoading] = useState(false)
+    const [passwordLoading, setPasswordLoading] = useState(false)
+    const [toast, setToast] = useState(null)
 
+    const showToast = useCallback((message, type = "success") => {
+        setToast({ message, type })
+    }, [])
 
-    // Password State
-    const [passwordData, setPasswordData] =
-        useState({
-            current_password: "",
-            new_password: "",
-            confirm_password: ""
-        })
-
-
-    // Validation Errors
-    const [validationErrors, setValidationErrors] =
-        useState({})
-
-
-    // Loading States
-    const [loading, setLoading] =
-        useState(false)
-
-    const [passwordLoading, setPasswordLoading] =
-        useState(false)
-
-
-    // Popup Messages
-    const [successMessage, setSuccessMessage] =
-        useState("")
-
-    const [error, setError] =
-        useState("")
-
-
-    // ==========================================
-    // Update Profile
-    // ==========================================
-    const handleProfileUpdate =
-        async (e) => {
-
-            e.preventDefault()
-
-            const errors = {}
-
-            // Full Name Validation
-            if (
-                !profileData.full_name.trim()
-            ) {
-
-                errors.full_name =
-                    "Full name is required"
-            }
-            // Email Validation
-            if (
-                !profileData.email.trim()
-            ) {
-
-                errors.email =
-                    "Email is required"
-
-            } else if (
-                !/\S+@\S+\.\S+/.test(
-                    profileData.email
-                )
-            ) {
-
-                errors.email =
-                    "Invalid email address"
-            }
-            // Phone Validation
-            if (
-                !profileData.phone.trim()
-            ) {
-
-                errors.phone =
-                    "Phone number is required"
-
-            } else if (
-                profileData.phone.length !== 10
-            ) {
-
-                errors.phone =
-                    "Phone number must be 10 digits"
-            }
-
-            // Department Validation
-            if (
-                !profileData.department.trim()
-            ) {
-
-                errors.department =
-                    "Department is required"
-            }
-
-            // Designation Validation
-            if (
-                !profileData.designation.trim()
-            ) {
-
-                errors.designation =
-                    "Designation is required"
-            }
-
-            // Stop if validation fails
-            if (
-                Object.keys(errors).length > 0
-            ) {
-
-                setValidationErrors(errors)
-
-                return
-            }
-
-            setValidationErrors({})
-
-            try {
-
-                setLoading(true)
-
-                setError("")
-
-                await updateMyProfile(
-                    profileData
-                )
-
-                setSuccessMessage(
-                    "Profile updated successfully"
-                )
-
-                setTimeout(() => {
-
-                    setSuccessMessage("")
-
-                }, 3000)
-
-            } catch (error) {
-
-                const apiError =
-                    error.response?.data?.detail
-
-                if (
-                    Array.isArray(apiError)
-                ) {
-
-                    setError(
-                        apiError[0]?.msg
-                    )
-
-                } else {
-
-                    setError(
-                        apiError
-                        || "Profile update failed"
-                    )
-                }
-
-                setTimeout(() => {
-
-                    setError("")
-
-                }, 3000)
-
-            } finally {
-
-                setLoading(false)
-            }
+    // ── Profile update ──────────────────────────────────────────────────────────
+    const handleProfileUpdate = async (e) => {
+        e.preventDefault()
+        const errors = validateProfile(profileData)
+        if (Object.keys(errors).length) { setProfileErrors(errors); return }
+        setProfileErrors({})
+        try {
+            setProfileLoading(true)
+            await updateMyProfile(profileData)
+            showToast("Profile updated successfully")
+        } catch (err) {
+            const detail = err.response?.data?.detail
+            showToast(
+                Array.isArray(detail) ? detail[0]?.msg : detail || "Profile update failed",
+                "error"
+            )
+        } finally {
+            setProfileLoading(false)
         }
+    }
 
-
-    // ==========================================
-    // Change Password
-    // ==========================================
-    const handlePasswordChange =
-        async (e) => {
-
-            e.preventDefault()
-
-            // Password Match Validation
-            if (
-                passwordData.new_password !==
-                passwordData.confirm_password
-            ) {
-
-                setError(
-                    "New password and confirm password do not match"
-                )
-
-                setTimeout(() => {
-
-                    setError("")
-
-                }, 3000)
-
-                return
-            }
-
-            // Password Length
-            if (
-                passwordData.new_password.length < 6
-            ) {
-
-                setError(
-                    "Password must be at least 6 characters"
-                )
-
-                setTimeout(() => {
-
-                    setError("")
-
-                }, 3000)
-
-                return
-            }
-
-            try {
-
-                setPasswordLoading(true)
-
-                setError("")
-
-                await changePassword({
-                    current_password:
-                        passwordData.current_password,
-
-                    new_password:
-                        passwordData.new_password
-                })
-
-                setSuccessMessage(
-                    "Password changed successfully"
-                )
-
-                setPasswordData({
-                    current_password: "",
-                    new_password: "",
-                    confirm_password: ""
-                })
-
-                setTimeout(() => {
-
-                    setSuccessMessage("")
-
-                }, 3000)
-
-            } catch (error) {
-
-                const apiError =
-                    error.response?.data?.detail
-
-                if (
-                    Array.isArray(apiError)
-                ) {
-
-                    setError(
-                        apiError[0]?.msg
-                    )
-
-                } else {
-
-                    setError(
-                        apiError
-                        || "Password update failed"
-                    )
-                }
-
-                setTimeout(() => {
-
-                    setError("")
-
-                }, 3000)
-
-            } finally {
-
-                setPasswordLoading(false)
-            }
+    // ── Password change ─────────────────────────────────────────────────────────
+    const handlePasswordChange = async (e) => {
+        e.preventDefault()
+        const errors = validatePassword(passwordData)
+        if (Object.keys(errors).length) { setPasswordErrors(errors); return }
+        setPasswordErrors({})
+        try {
+            setPasswordLoading(true)
+            await changePassword({
+                current_password: passwordData.current_password,
+                new_password: passwordData.new_password,
+            })
+            showToast("Password changed successfully")
+            setPasswordData({ current_password: "", new_password: "", confirm_password: "" })
+        } catch (err) {
+            const detail = err.response?.data?.detail
+            showToast(
+                Array.isArray(detail) ? detail[0]?.msg : detail || "Password update failed",
+                "error"
+            )
+        } finally {
+            setPasswordLoading(false)
         }
+    }
 
+    const setP = (key) => (e) =>
+        setProfileData((prev) => ({ ...prev, [key]: e.target.value }))
+
+    const setPwd = (key) => (e) =>
+        setPasswordData((prev) => ({ ...prev, [key]: e.target.value }))
 
     return (
-
         <MainLayout>
+            {/* Toast */}
+            {toast && (
+                <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+            )}
 
-            <div className="space-y-10">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-
-                {/* Success Popup */}
-                {
-                    successMessage && (
-
-                        <div className="fixed top-6 right-6 z-50">
-
-                            <div className="bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl min-w-[320px]">
-
-                                <div className="flex items-center gap-3">
-
-                                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-
-                                        ✓
-
-                                    </div>
-
-                                    <div>
-
-                                        <h3 className="font-bold text-lg">
-
-                                            Success
-
-                                        </h3>
-
-                                        <p className="text-sm text-green-50">
-
-                                            {successMessage}
-
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
+                {/* ── Hero Header ── */}
+                <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl p-6 sm:p-8 shadow-xl text-white">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                        <Avatar name={profileData.full_name} />
+                        <div className="min-w-0">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black truncate">
+                                {profileData.full_name || "My Profile"}
+                            </h1>
+                            <p className="text-cyan-100 text-sm sm:text-base mt-1 truncate">
+                                {profileData.designation || "—"}
+                                {profileData.department ? ` · ${profileData.department}` : ""}
+                            </p>
+                            <p className="text-cyan-200 text-xs sm:text-sm mt-0.5 truncate">
+                                {profileData.email}
+                            </p>
                         </div>
-                    )
-                }
-
-
-                {/* Error Popup */}
-                {
-                    error && (
-
-                        <div className="fixed top-6 right-6 z-50">
-
-                            <div className="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl min-w-[320px]">
-
-                                <div className="flex items-center gap-3">
-
-                                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-
-                                        !
-
-                                    </div>
-
-                                    <div>
-
-                                        <h3 className="font-bold text-lg">
-
-                                            Error
-
-                                        </h3>
-
-                                        <p className="text-sm text-red-50">
-
-                                            {error}
-
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-                    )
-                }
-
-
-                {/* Header */}
-                <div className="bg-gradient-to-r from-cyan-500 to-blue-600 rounded-3xl p-10 shadow-2xl text-white">
-
-                    <h1 className="text-5xl font-black mb-4">
-
-                        My Profile
-
-                    </h1>
-
-                    <p className="text-cyan-100 text-lg">
-
-                        Manage your account information and security settings
-
-                    </p>
-
+                    </div>
                 </div>
 
-
-                <div className="grid lg:grid-cols-2 gap-8">
-
+                {/* ── Two Column Cards ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* Profile Card */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
-
-                        <div className="mb-8">
-
-                            <h2 className="text-3xl font-bold text-slate-800 mb-2">
-
-                                Update Profile
-
-                            </h2>
-
-                            <p className="text-slate-500">
-
-                                Update your personal information
-
-                            </p>
-
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-5 border-b border-slate-100">
+                            <h2 className="text-lg font-bold text-slate-900">Update Profile</h2>
+                            <p className="text-sm text-slate-500 mt-0.5">Edit your personal information</p>
                         </div>
 
-
-                        <form
-                            onSubmit={handleProfileUpdate}
-                            className="space-y-5"
-                        >
-
-
-                            {/* Full Name */}
-                            <div>
-
-                                <label className="block text-sm font-semibold text-slate-600 mb-2">
-
-                                    Full Name
-
-                                </label>
-
+                        <form onSubmit={handleProfileUpdate} noValidate className="p-6 space-y-4">
+                            <Field label="Full Name" error={profileErrors.full_name} required>
                                 <input
                                     type="text"
                                     value={profileData.full_name}
-                                    onChange={(e) =>
-                                        setProfileData({
-                                            ...profileData,
-                                            full_name: e.target.value
-                                        })
-                                    }
-                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                    onChange={setP("full_name")}
+                                    placeholder="John Doe"
+                                    className={INPUT_CLS}
                                 />
+                            </Field>
 
-                                {
-                                    validationErrors.full_name && (
-
-                                        <p className="text-red-500 text-sm mt-2">
-
-                                            {validationErrors.full_name}
-
-                                        </p>
-                                    )
-                                }
-
-                            </div>
-                            {/* Email */}
-                            <div>
-
-                                <label className="block text-sm font-semibold text-slate-600 mb-2">
-
-                                    Email Address
-
-                                </label>
-
+                            <Field label="Email Address" error={profileErrors.email} required>
                                 <input
                                     type="email"
                                     value={profileData.email}
-                                    onChange={(e) =>
-                                        setProfileData({
-                                            ...profileData,
-                                            email: e.target.value
-                                        })
-                                    }
-                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                    onChange={setP("email")}
+                                    placeholder="john@company.com"
+                                    className={INPUT_CLS}
                                 />
+                            </Field>
 
-                                {
-                                    validationErrors.email && (
-
-                                        <p className="text-red-500 text-sm mt-2">
-
-                                            {validationErrors.email}
-
-                                        </p>
-                                    )
-                                }
-
-                            </div>
-
-                            {/* Phone */}
-                            <div>
-
-                                <label className="block text-sm font-semibold text-slate-600 mb-2">
-
-                                    Phone Number
-
-                                </label>
-
+                            <Field label="Phone Number" error={profileErrors.phone} required>
                                 <input
-                                    type="text"
+                                    type="tel"
                                     value={profileData.phone}
-                                    onChange={(e) =>
-                                        setProfileData({
-                                            ...profileData,
-                                            phone: e.target.value
-                                        })
-                                    }
-                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                    onChange={setP("phone")}
+                                    placeholder="10-digit number"
+                                    maxLength={10}
+                                    className={INPUT_CLS}
                                 />
+                            </Field>
 
-                                {
-                                    validationErrors.phone && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Field label="Department" error={profileErrors.department} required>
+                                    <select value={profileData.department} onChange={setP("department")} className={INPUT_CLS}>
+                                        <option value="">Select</option>
+                                        {DEPARTMENTS.map((d) => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </select>
+                                </Field>
 
-                                        <p className="text-red-500 text-sm mt-2">
-
-                                            {validationErrors.phone}
-
-                                        </p>
-                                    )
-                                }
-
+                                <Field label="Designation" error={profileErrors.designation} required>
+                                    <input
+                                        type="text"
+                                        value={profileData.designation}
+                                        onChange={setP("designation")}
+                                        placeholder="e.g. Developer"
+                                        className={INPUT_CLS}
+                                    />
+                                </Field>
                             </div>
 
-
-                            {/* Department */}
-                            <div>
-
-                                <label className="block text-sm font-semibold text-slate-600 mb-2">
-
-                                    Department
-
-                                </label>
-
-                                <input
-                                    type="text"
-                                    value={profileData.department}
-                                    onChange={(e) =>
-                                        setProfileData({
-                                            ...profileData,
-                                            department: e.target.value
-                                        })
-                                    }
-                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                                />
-
-                                {
-                                    validationErrors.department && (
-
-                                        <p className="text-red-500 text-sm mt-2">
-
-                                            {validationErrors.department}
-
-                                        </p>
-                                    )
-                                }
-
-                            </div>
-
-
-                            {/* Designation */}
-                            <div>
-
-                                <label className="block text-sm font-semibold text-slate-600 mb-2">
-
-                                    Designation
-
-                                </label>
-
-                                <input
-                                    type="text"
-                                    value={profileData.designation}
-                                    onChange={(e) =>
-                                        setProfileData({
-                                            ...profileData,
-                                            designation: e.target.value
-                                        })
-                                    }
-                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                                />
-
-                                {
-                                    validationErrors.designation && (
-
-                                        <p className="text-red-500 text-sm mt-2">
-
-                                            {validationErrors.designation}
-
-                                        </p>
-                                    )
-                                }
-
-                            </div>
-
-
-                            {/* Submit */}
                             <button
                                 type="submit"
-                                disabled={loading}
-                                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-4 rounded-2xl font-semibold shadow-lg hover:opacity-90 transition"
+                                disabled={profileLoading}
+                                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition disabled:opacity-60 cursor-pointer mt-2"
                             >
-
-                                {
-                                    loading
-                                        ? "Updating..."
-                                        : "Update Profile"
-                                }
-
+                                {profileLoading ? "Saving…" : "Save Changes"}
                             </button>
-
                         </form>
-
                     </div>
 
-
                     {/* Password Card */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
-
-                        <div className="mb-8">
-
-                            <h2 className="text-3xl font-bold text-slate-800 mb-2">
-
-                                Change Password
-
-                            </h2>
-
-                            <p className="text-slate-500">
-
-                                Keep your account secure
-
-                            </p>
-
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-5 border-b border-slate-100">
+                            <h2 className="text-lg font-bold text-slate-900">Change Password</h2>
+                            <p className="text-sm text-slate-500 mt-0.5">Keep your account secure</p>
                         </div>
 
+                        <form onSubmit={handlePasswordChange} noValidate className="p-6 space-y-4">
 
-                        <form
-                            onSubmit={handlePasswordChange}
-                            className="space-y-5"
-                        >
+                            {/* Password strength hint */}
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-700 flex items-start gap-2">
+                                <span className="text-base leading-none mt-0.5">🔒</span>
+                                <span>Use at least 6 characters with a mix of letters and numbers for a strong password.</span>
+                            </div>
 
-                            <input
-                                type="password"
-                                placeholder="Current Password"
+                            <PasswordField
+                                label="Current Password"
+                                placeholder="Enter current password"
                                 value={passwordData.current_password}
-                                onChange={(e) =>
-                                    setPasswordData({
-                                        ...passwordData,
-                                        current_password: e.target.value
-                                    })
-                                }
-                                className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500"
+                                onChange={setPwd("current_password")}
+                                error={passwordErrors.current_password}
                             />
 
-
-                            <input
-                                type="password"
-                                placeholder="New Password"
+                            <PasswordField
+                                label="New Password"
+                                placeholder="Enter new password"
                                 value={passwordData.new_password}
-                                onChange={(e) =>
-                                    setPasswordData({
-                                        ...passwordData,
-                                        new_password: e.target.value
-                                    })
-                                }
-                                className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500"
+                                onChange={setPwd("new_password")}
+                                error={passwordErrors.new_password}
                             />
 
+                            {/* Strength bar */}
+                            {passwordData.new_password && (() => {
+                                const len = passwordData.new_password.length
+                                const strength = len < 6 ? 1 : len < 10 ? 2 : 3
+                                const labels = ["", "Weak", "Fair", "Strong"]
+                                const colors = ["", "bg-red-400", "bg-amber-400", "bg-emerald-500"]
+                                return (
+                                    <div className="space-y-1 -mt-1">
+                                        <div className="flex gap-1">
+                                            {[1, 2, 3].map((s) => (
+                                                <div
+                                                    key={s}
+                                                    className={[
+                                                        "h-1.5 flex-1 rounded-full transition-all",
+                                                        s <= strength ? colors[strength] : "bg-slate-200",
+                                                    ].join(" ")}
+                                                />
+                                            ))}
+                                        </div>
+                                        <p className={`text-xs font-medium ${["", "text-red-500", "text-amber-500", "text-emerald-600"][strength]}`}>
+                                            {labels[strength]}
+                                        </p>
+                                    </div>
+                                )
+                            })()}
 
-                            <input
-                                type="password"
-                                placeholder="Confirm Password"
+                            <PasswordField
+                                label="Confirm Password"
+                                placeholder="Re-enter new password"
                                 value={passwordData.confirm_password}
-                                onChange={(e) =>
-                                    setPasswordData({
-                                        ...passwordData,
-                                        confirm_password: e.target.value
-                                    })
-                                }
-                                className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500"
+                                onChange={setPwd("confirm_password")}
+                                error={passwordErrors.confirm_password}
                             />
-
 
                             <button
                                 type="submit"
                                 disabled={passwordLoading}
-                                className="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-4 rounded-2xl font-semibold shadow-lg hover:opacity-90 transition"
+                                className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition disabled:opacity-60 cursor-pointer mt-2"
                             >
-
-                                {
-                                    passwordLoading
-                                        ? "Updating Password..."
-                                        : "Change Password"
-                                }
-
+                                {passwordLoading ? "Updating…" : "Change Password"}
                             </button>
-
                         </form>
-
                     </div>
 
                 </div>
-
             </div>
-
         </MainLayout>
     )
 }
