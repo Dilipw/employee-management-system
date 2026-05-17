@@ -1,6 +1,16 @@
 import MainLayout from "../layouts/MainLayout"
 
+import {
+  useAuth
+} from "../context/AuthContext"
+
+
 function DashboardPage() {
+
+  const {
+    isAuthenticated
+  } = useAuth()
+
 
   return (
 
@@ -12,9 +22,19 @@ function DashboardPage() {
           Dashboard
         </h1>
 
-        <p>
-          Welcome to Employee Management System
+        <p className="mb-4">
+          Authentication Status:
         </p>
+
+        <div className="font-semibold text-lg">
+
+          {
+            isAuthenticated
+              ? "Authenticated ✅"
+              : "Not Authenticated ❌"
+          }
+
+        </div>
 
       </div>
 

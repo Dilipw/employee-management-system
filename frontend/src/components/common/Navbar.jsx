@@ -1,4 +1,28 @@
+import {
+  useNavigate
+} from "react-router-dom"
+
+import {
+  useAuth
+} from "../../context/AuthContext"
+
+
 function Navbar() {
+
+  const navigate = useNavigate()
+
+  const {
+    logout
+  } = useAuth()
+
+
+  const handleLogout = () => {
+
+    logout()
+
+    navigate("/")
+  }
+
 
   return (
 
@@ -11,6 +35,7 @@ function Navbar() {
         </h1>
 
         <button
+          onClick={handleLogout}
           className="bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition"
         >
           Logout

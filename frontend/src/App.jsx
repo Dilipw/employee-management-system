@@ -7,6 +7,9 @@ import {
 import LoginPage from "./pages/LoginPage"
 import DashboardPage from "./pages/DashboardPage"
 
+import ProtectedRoute from "./components/common/ProtectedRoute"
+
+
 function App() {
 
   return (
@@ -15,14 +18,25 @@ function App() {
 
       <Routes>
 
+        {/* Public Route */}
         <Route
           path="/"
           element={<LoginPage />}
         />
 
+
+
+        {/* Protected Route */}
         <Route
           path="/dashboard"
-          element={<DashboardPage />}
+          element={
+
+            <ProtectedRoute>
+
+              <DashboardPage />
+
+            </ProtectedRoute>
+          }
         />
 
       </Routes>
