@@ -9,6 +9,7 @@ import DashboardPage from "./pages/DashboardPage"
 import HomePage from "./pages/HomePage"
 import FeaturesPage from "./pages/FeaturesPage"
 import AboutPage from "./pages/AboutPage"
+import EmployeesPage from "./pages/EmployeesPage"
 
 import Navbar from "./components/common/Navbar"
 
@@ -64,7 +65,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/employees"
+          element={
+            <ProtectedRoute>
 
+              <EmployeesPage />
+
+            </ProtectedRoute>
+          }
+        />
       </Routes>
 
     </BrowserRouter>
