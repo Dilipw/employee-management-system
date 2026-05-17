@@ -6,7 +6,9 @@ import {
 import MainLayout from "../layouts/MainLayout"
 
 import {
-    getEmployees
+    getEmployees,
+    updateEmployee,
+    deleteEmployee
 } from "../services/employeeService"
 
 
@@ -23,6 +25,15 @@ function EmployeesPage() {
     const [limit] = useState(5)
 
     const [total, setTotal] = useState(0)
+
+    const [editingEmployee, setEditingEmployee] =
+        useState(null)
+
+    const [deleteLoading, setDeleteLoading] =
+        useState(false)
+
+    const [updateLoading, setUpdateLoading] =
+        useState(false)
 
 
     const fetchEmployees =
@@ -64,7 +75,67 @@ function EmployeesPage() {
 
     }, [page])
 
+    const handleDelete =
+        async (employeeId) => {
 
+            const confirmDelete =
+                window.confirm(
+                    "Are you sure you want to delete this employee?"
+                )
+
+            if (!confirmDelete) return
+
+            try {
+
+                setDeleteLoading(true)
+
+                await deleteEmployee(employeeId)
+
+                await fetchEmployees()
+
+            } catch (error) {
+
+                alert(
+                    error.response?.data?.detail
+                    || "Delete failed"
+                )
+
+            } finally {
+
+                setDeleteLoading(false)
+            }
+        }
+
+    const handleUpdate =
+        async (e) => {
+
+            e.preventDefault()
+
+            try {
+
+                setUpdateLoading(true)
+
+                await updateEmployee(
+                    editingEmployee.id,
+                    editingEmployee
+                )
+
+                setEditingEmployee(null)
+
+                await fetchEmployees()
+
+            } catch (error) {
+
+                alert(
+                    error.response?.data?.detail
+                    || "Update failed"
+                )
+
+            } finally {
+
+                setUpdateLoading(false)
+            }
+        }
     return (
 
         <MainLayout>
@@ -145,7 +216,9 @@ function EmployeesPage() {
                                             <th className="text-left p-5 font-semibold text-slate-600">
                                                 Designation
                                             </th>
-
+                                            <th className="text-left p-5 font-semibold text-slate-600">
+                                                Actions
+                                            </th>
                                         </tr>
 
                                     </thead>
@@ -186,7 +259,33 @@ function EmployeesPage() {
                                                             {employee.designation}
 
                                                         </td>
+                                                        <td className="p-5">
 
+                                                            <div className="flex gap-3">
+
+                                                                <button
+                                                                    onClick={() =>
+                                                                        setEditingEmployee(employee)
+                                                                    }
+                                                                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl transition"
+                                                                >
+                                                                    Update
+                                                                </button>
+
+
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleDelete(employee.id)
+                                                                    }
+                                                                    disabled={deleteLoading}
+                                                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition disabled:opacity-50"
+                                                                >
+                                                                    Delete
+                                                                </button>
+
+                                                            </div>
+
+                                                        </td>
                                                     </tr>
                                                 ))
 
@@ -257,7 +356,103 @@ function EmployeesPage() {
                 </div>
 
             </div>
+            {
+                editingEmployee && (
 
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-6">
+
+                        <div className="bg-white w-full max-w-xl rounded-3xl p-8 shadow-2xl">
+
+                            <h2 className="text-3xl font-bold mb-8">
+
+                                Update Employee
+
+                            </h2>
+
+
+                            <form
+                                onSubmit={handleUpdate}
+                                className="space-y-5"
+                            >
+
+                                <input
+                                    type="text"
+                                    placeholder="Full Name"
+                                    value={editingEmployee.full_name}
+                                    onChange={(e) =>
+                                        setEditingEmployee({
+                                            ...editingEmployee,
+                                            full_name: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl"
+                                />
+
+
+                                <input
+                                    type="text"
+                                    placeholder="Department"
+                                    value={editingEmployee.department}
+                                    onChange={(e) =>
+                                        setEditingEmployee({
+                                            ...editingEmployee,
+                                            department: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl"
+                                />
+
+
+                                <input
+                                    type="text"
+                                    placeholder="Designation"
+                                    value={editingEmployee.designation}
+                                    onChange={(e) =>
+                                        setEditingEmployee({
+                                            ...editingEmployee,
+                                            designation: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl"
+                                />
+
+
+                                <div className="flex justify-end gap-4 pt-4">
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setEditingEmployee(null)
+                                        }
+                                        className="px-6 py-3 rounded-2xl bg-slate-200"
+                                    >
+                                        Cancel
+                                    </button>
+
+
+                                    <button
+                                        type="submit"
+                                        disabled={updateLoading}
+                                        className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
+                                    >
+
+                                        {
+                                            updateLoading
+                                                ? "Updating..."
+                                                : "Update Employee"
+                                        }
+
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+                )
+            }
         </MainLayout>
     )
 }

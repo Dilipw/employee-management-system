@@ -49,3 +49,28 @@ export const getLoggedInEmployee =
 
     return response.data
 }
+
+export const updateEmployee = async (
+    employeeId,
+    data
+) => {
+
+    const response = await api.put(
+        `/employees/${employeeId}`,
+        data
+    )
+
+    return response.data
+}
+
+
+export const deleteEmployee = async (
+    employeeId
+) => {
+
+    const response = await api.delete(
+        `/employees/${employeeId}`
+    )
+
+    return response.data
+}
