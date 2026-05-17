@@ -6,6 +6,9 @@ import {
 
 import LoginPage from "./pages/LoginPage"
 import DashboardPage from "./pages/DashboardPage"
+import HomePage from "./pages/HomePage"
+import FeaturesPage from "./pages/FeaturesPage"
+import AboutPage from "./pages/AboutPage"
 
 import Navbar from "./components/common/Navbar"
 
@@ -26,13 +29,12 @@ function App() {
         {/* Public Routes */}
         <Route
           path="/"
-          element={
-            <div className="p-10 text-center">
-              <h1 className="text-5xl font-bold">
-                Welcome to EmployeeHub 🚀
-              </h1>
-            </div>
-          }
+          element={<HomePage />}
+        />
+
+        <Route
+          path="/login"
+          element={<LoginPage />}
         />
 
         <Route
@@ -42,20 +44,12 @@ function App() {
 
         <Route
           path="/features"
-          element={
-            <div className="p-10 text-center">
-              Features Page
-            </div>
-          }
+          element={<FeaturesPage />}
         />
 
         <Route
           path="/about"
-          element={
-            <div className="p-10 text-center">
-              About Page
-            </div>
-          }
+          element={<AboutPage />}
         />
 
 
