@@ -13,7 +13,8 @@ from app.utils.security import (
 
 from app.schemas.employee import (
     EmployeeCreate,
-    EmployeeUpdate
+    EmployeeUpdate,
+    ChangePasswordSchema
 )
 
 from app.auth.jwt_handler import create_access_token
@@ -182,4 +183,31 @@ def delete_employee_service(
 
     return {
         "message": "Employee deleted successfully"
+    }
+
+def change_password_service(
+    current_employee: Employee,
+    password_data,
+    db: Session
+):
+
+    # Verify old password
+    if not verify_password(
+        password_data.current_password,
+        current_employee.password
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Current password is incorrect"
+        )
+
+    # Update password
+    current_employee.password = hash_password(
+        password_data.new_password
+    )
+
+    db.commit()
+
+    return {
+        "message": "Password updated successfully"
     }

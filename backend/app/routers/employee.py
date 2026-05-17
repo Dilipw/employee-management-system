@@ -18,7 +18,8 @@ from app.schemas.employee import (
     EmployeeLogin,
     TokenResponse,
     EmployeeUpdate,
-    EmployeeListResponse
+    EmployeeListResponse,
+    ChangePasswordSchema
 )
 
 from app.services.employee_service import (
@@ -149,5 +150,24 @@ def delete_employee(
 
     return delete_employee_service(
         employee_id,
+        db
+    )
+
+@router.put(
+    "/me",
+    response_model=EmployeeResponse,
+    status_code=status.HTTP_200_OK
+)
+def update_my_profile(
+    employee: EmployeeUpdate,
+    db: Session = Depends(get_db),
+    current_employee: Employee = Depends(
+        get_current_employee
+    )
+):
+
+    return update_employee_service(
+        current_employee.id,
+        employee,
         db
     )

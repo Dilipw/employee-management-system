@@ -108,3 +108,9 @@ class EmployeeListResponse(BaseModel):
     limit: int
 
     data: List[EmployeeResponse]
+
+class ChangePasswordSchema(BaseModel):
+
+    current_password: str
+
+    new_password: str
