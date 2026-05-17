@@ -6,6 +6,7 @@ from app.models.employee import Employee
 
 from app.routers.employee import router as employee_router
 
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Employee Management API",
@@ -13,7 +14,20 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
 
+    allow_origins=[
+        "http://localhost:5173"
+    ],
+
+    allow_credentials=True,
+
+    allow_methods=["*"],
+
+    allow_headers=["*"],
+)
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
 
