@@ -354,7 +354,9 @@ function EmployeesPage() {
                                             <th className="text-left p-5 font-semibold text-slate-600">
                                                 Designation
                                             </th>
-
+                                            <th className="text-left p-5 font-semibold text-slate-600">
+                                                Status
+                                            </th>
                                             <th className="text-left p-5 font-semibold text-slate-600">
                                                 Actions
                                             </th>
@@ -399,7 +401,22 @@ function EmployeesPage() {
                                                             {employee.designation}
 
                                                         </td>
+                                                        <td className="p-5">
 
+                                                            <span className={`px-4 py-2 rounded-full text-sm font-semibold ${employee.is_active
+                                                                    ? "bg-green-100 text-green-600"
+                                                                    : "bg-red-100 text-red-600"
+                                                                }`}>
+
+                                                                {
+                                                                    employee.is_active
+                                                                        ? "Active"
+                                                                        : "Inactive"
+                                                                }
+
+                                                            </span>
+
+                                                        </td>
 
                                                         <td className="p-5">
 
@@ -637,7 +654,18 @@ function EmployeesPage() {
                                     className="w-full border border-slate-300 p-4 rounded-2xl"
                                 />
 
-
+                                <input
+                                    type="text"
+                                    placeholder="Phone Number"
+                                    value={editingEmployee.phone}
+                                    onChange={(e) =>
+                                        setEditingEmployee({
+                                            ...editingEmployee,
+                                            phone: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl"
+                                />
                                 <input
                                     type="text"
                                     placeholder="Department"
@@ -665,7 +693,27 @@ function EmployeesPage() {
                                     className="w-full border border-slate-300 p-4 rounded-2xl"
                                 />
 
+                                <select
+                                    value={editingEmployee.is_active}
+                                    onChange={(e) =>
+                                        setEditingEmployee({
+                                            ...editingEmployee,
+                                            is_active:
+                                                e.target.value === "true"
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl"
+                                >
 
+                                    <option value={true}>
+                                        Active
+                                    </option>
+
+                                    <option value={false}>
+                                        Inactive
+                                    </option>
+
+                                </select>
                                 <div className="flex justify-end gap-4 pt-4">
 
                                     <button
