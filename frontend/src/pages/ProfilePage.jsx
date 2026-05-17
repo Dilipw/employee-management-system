@@ -21,6 +21,7 @@ function ProfilePage() {
     } = useAuth()
 
 
+    // Profile State
     const [profileData, setProfileData] =
         useState({
             full_name: user?.full_name || "",
@@ -30,19 +31,29 @@ function ProfilePage() {
         })
 
 
+    // Password State
     const [passwordData, setPasswordData] =
         useState({
             current_password: "",
-            new_password: ""
+            new_password: "",
+            confirm_password: ""
         })
 
 
+    // Validation Errors
+    const [validationErrors, setValidationErrors] =
+        useState({})
+
+
+    // Loading States
     const [loading, setLoading] =
         useState(false)
 
     const [passwordLoading, setPasswordLoading] =
         useState(false)
 
+
+    // Popup Messages
     const [successMessage, setSuccessMessage] =
         useState("")
 
@@ -50,11 +61,70 @@ function ProfilePage() {
         useState("")
 
 
+    // ==========================================
     // Update Profile
+    // ==========================================
     const handleProfileUpdate =
         async (e) => {
 
             e.preventDefault()
+
+            const errors = {}
+
+            // Full Name Validation
+            if (
+                !profileData.full_name.trim()
+            ) {
+
+                errors.full_name =
+                    "Full name is required"
+            }
+
+            // Phone Validation
+            if (
+                !profileData.phone.trim()
+            ) {
+
+                errors.phone =
+                    "Phone number is required"
+
+            } else if (
+                profileData.phone.length !== 10
+            ) {
+
+                errors.phone =
+                    "Phone number must be 10 digits"
+            }
+
+            // Department Validation
+            if (
+                !profileData.department.trim()
+            ) {
+
+                errors.department =
+                    "Department is required"
+            }
+
+            // Designation Validation
+            if (
+                !profileData.designation.trim()
+            ) {
+
+                errors.designation =
+                    "Designation is required"
+            }
+
+            // Stop if validation fails
+            if (
+                Object.keys(errors).length > 0
+            ) {
+
+                setValidationErrors(errors)
+
+                return
+            }
+
+            setValidationErrors({})
 
             try {
 
@@ -70,31 +140,90 @@ function ProfilePage() {
                     "Profile updated successfully"
                 )
 
-            } catch (error) {
-
-                setError(
-                    error.response?.data?.detail
-                    || "Profile update failed"
-                )
-
-            } finally {
-
-                setLoading(false)
-
                 setTimeout(() => {
 
                     setSuccessMessage("")
 
                 }, 3000)
+
+            } catch (error) {
+
+                const apiError =
+                    error.response?.data?.detail
+
+                if (
+                    Array.isArray(apiError)
+                ) {
+
+                    setError(
+                        apiError[0]?.msg
+                    )
+
+                } else {
+
+                    setError(
+                        apiError
+                        || "Profile update failed"
+                    )
+                }
+
+                setTimeout(() => {
+
+                    setError("")
+
+                }, 3000)
+
+            } finally {
+
+                setLoading(false)
             }
         }
 
 
+    // ==========================================
     // Change Password
+    // ==========================================
     const handlePasswordChange =
         async (e) => {
 
             e.preventDefault()
+
+            // Password Match Validation
+            if (
+                passwordData.new_password !==
+                passwordData.confirm_password
+            ) {
+
+                setError(
+                    "New password and confirm password do not match"
+                )
+
+                setTimeout(() => {
+
+                    setError("")
+
+                }, 3000)
+
+                return
+            }
+
+            // Password Length
+            if (
+                passwordData.new_password.length < 6
+            ) {
+
+                setError(
+                    "Password must be at least 6 characters"
+                )
+
+                setTimeout(() => {
+
+                    setError("")
+
+                }, 3000)
+
+                return
+            }
 
             try {
 
@@ -102,9 +231,13 @@ function ProfilePage() {
 
                 setError("")
 
-                await changePassword(
-                    passwordData
-                )
+                await changePassword({
+                    current_password:
+                        passwordData.current_password,
+
+                    new_password:
+                        passwordData.new_password
+                })
 
                 setSuccessMessage(
                     "Password changed successfully"
@@ -112,25 +245,46 @@ function ProfilePage() {
 
                 setPasswordData({
                     current_password: "",
-                    new_password: ""
+                    new_password: "",
+                    confirm_password: ""
                 })
-
-            } catch (error) {
-
-                setError(
-                    error.response?.data?.detail
-                    || "Password update failed"
-                )
-
-            } finally {
-
-                setPasswordLoading(false)
 
                 setTimeout(() => {
 
                     setSuccessMessage("")
 
                 }, 3000)
+
+            } catch (error) {
+
+                const apiError =
+                    error.response?.data?.detail
+
+                if (
+                    Array.isArray(apiError)
+                ) {
+
+                    setError(
+                        apiError[0]?.msg
+                    )
+
+                } else {
+
+                    setError(
+                        apiError
+                        || "Password update failed"
+                    )
+                }
+
+                setTimeout(() => {
+
+                    setError("")
+
+                }, 3000)
+
+            } finally {
+
+                setPasswordLoading(false)
             }
         }
 
@@ -142,26 +296,82 @@ function ProfilePage() {
             <div className="space-y-10">
 
 
-                {/* Success */}
+                {/* Success Popup */}
                 {
                     successMessage && (
 
-                        <div className="bg-green-100 text-green-600 p-5 rounded-2xl">
+                        <div className="fixed top-6 right-6 z-50">
 
-                            {successMessage}
+                            <div className="bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl min-w-[320px]">
+
+                                <div className="flex items-center gap-3">
+
+                                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+
+                                        ✓
+
+                                    </div>
+
+                                    <div>
+
+                                        <h3 className="font-bold text-lg">
+
+                                            Success
+
+                                        </h3>
+
+                                        <p className="text-sm text-green-50">
+
+                                            {successMessage}
+
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
 
                         </div>
                     )
                 }
 
 
-                {/* Error */}
+                {/* Error Popup */}
                 {
                     error && (
 
-                        <div className="bg-red-100 text-red-600 p-5 rounded-2xl">
+                        <div className="fixed top-6 right-6 z-50">
 
-                            {error}
+                            <div className="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl min-w-[320px]">
+
+                                <div className="flex items-center gap-3">
+
+                                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+
+                                        !
+
+                                    </div>
+
+                                    <div>
+
+                                        <h3 className="font-bold text-lg">
+
+                                            Error
+
+                                        </h3>
+
+                                        <p className="text-sm text-red-50">
+
+                                            {error}
+
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
 
                         </div>
                     )
@@ -169,7 +379,7 @@ function ProfilePage() {
 
 
                 {/* Header */}
-                <div className="bg-gradient-to-r from-cyan-500 to-blue-600 rounded-3xl p-10 text-white shadow-2xl">
+                <div className="bg-gradient-to-r from-cyan-500 to-blue-600 rounded-3xl p-10 shadow-2xl text-white">
 
                     <h1 className="text-5xl font-black mb-4">
 
@@ -179,7 +389,7 @@ function ProfilePage() {
 
                     <p className="text-cyan-100 text-lg">
 
-                        Manage your account settings and security
+                        Manage your account information and security settings
 
                     </p>
 
@@ -189,14 +399,24 @@ function ProfilePage() {
                 <div className="grid lg:grid-cols-2 gap-8">
 
 
-                    {/* Update Profile */}
-                    <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8">
+                    {/* Profile Card */}
+                    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
 
-                        <h2 className="text-3xl font-bold mb-8">
+                        <div className="mb-8">
 
-                            Update Profile
+                            <h2 className="text-3xl font-bold text-slate-800 mb-2">
 
-                        </h2>
+                                Update Profile
+
+                            </h2>
+
+                            <p className="text-slate-500">
+
+                                Update your personal information
+
+                            </p>
+
+                        </div>
 
 
                         <form
@@ -204,66 +424,152 @@ function ProfilePage() {
                             className="space-y-5"
                         >
 
-                            <input
-                                type="text"
-                                placeholder="Full Name"
-                                value={profileData.full_name}
-                                onChange={(e) =>
-                                    setProfileData({
-                                        ...profileData,
-                                        full_name: e.target.value
-                                    })
+
+                            {/* Full Name */}
+                            <div>
+
+                                <label className="block text-sm font-semibold text-slate-600 mb-2">
+
+                                    Full Name
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={profileData.full_name}
+                                    onChange={(e) =>
+                                        setProfileData({
+                                            ...profileData,
+                                            full_name: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                />
+
+                                {
+                                    validationErrors.full_name && (
+
+                                        <p className="text-red-500 text-sm mt-2">
+
+                                            {validationErrors.full_name}
+
+                                        </p>
+                                    )
                                 }
-                                className="w-full border border-slate-300 p-4 rounded-2xl"
-                            />
+
+                            </div>
 
 
-                            <input
-                                type="text"
-                                placeholder="Phone Number"
-                                value={profileData.phone}
-                                onChange={(e) =>
-                                    setProfileData({
-                                        ...profileData,
-                                        phone: e.target.value
-                                    })
+                            {/* Phone */}
+                            <div>
+
+                                <label className="block text-sm font-semibold text-slate-600 mb-2">
+
+                                    Phone Number
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={profileData.phone}
+                                    onChange={(e) =>
+                                        setProfileData({
+                                            ...profileData,
+                                            phone: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                />
+
+                                {
+                                    validationErrors.phone && (
+
+                                        <p className="text-red-500 text-sm mt-2">
+
+                                            {validationErrors.phone}
+
+                                        </p>
+                                    )
                                 }
-                                className="w-full border border-slate-300 p-4 rounded-2xl"
-                            />
+
+                            </div>
 
 
-                            <input
-                                type="text"
-                                placeholder="Department"
-                                value={profileData.department}
-                                onChange={(e) =>
-                                    setProfileData({
-                                        ...profileData,
-                                        department: e.target.value
-                                    })
+                            {/* Department */}
+                            <div>
+
+                                <label className="block text-sm font-semibold text-slate-600 mb-2">
+
+                                    Department
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={profileData.department}
+                                    onChange={(e) =>
+                                        setProfileData({
+                                            ...profileData,
+                                            department: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                />
+
+                                {
+                                    validationErrors.department && (
+
+                                        <p className="text-red-500 text-sm mt-2">
+
+                                            {validationErrors.department}
+
+                                        </p>
+                                    )
                                 }
-                                className="w-full border border-slate-300 p-4 rounded-2xl"
-                            />
+
+                            </div>
 
 
-                            <input
-                                type="text"
-                                placeholder="Designation"
-                                value={profileData.designation}
-                                onChange={(e) =>
-                                    setProfileData({
-                                        ...profileData,
-                                        designation: e.target.value
-                                    })
+                            {/* Designation */}
+                            <div>
+
+                                <label className="block text-sm font-semibold text-slate-600 mb-2">
+
+                                    Designation
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={profileData.designation}
+                                    onChange={(e) =>
+                                        setProfileData({
+                                            ...profileData,
+                                            designation: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                />
+
+                                {
+                                    validationErrors.designation && (
+
+                                        <p className="text-red-500 text-sm mt-2">
+
+                                            {validationErrors.designation}
+
+                                        </p>
+                                    )
                                 }
-                                className="w-full border border-slate-300 p-4 rounded-2xl"
-                            />
+
+                            </div>
 
 
+                            {/* Submit */}
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-4 rounded-2xl font-semibold shadow-lg"
+                                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-4 rounded-2xl font-semibold shadow-lg hover:opacity-90 transition"
                             >
 
                                 {
@@ -279,14 +585,24 @@ function ProfilePage() {
                     </div>
 
 
-                    {/* Change Password */}
-                    <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8">
+                    {/* Password Card */}
+                    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
 
-                        <h2 className="text-3xl font-bold mb-8">
+                        <div className="mb-8">
 
-                            Change Password
+                            <h2 className="text-3xl font-bold text-slate-800 mb-2">
 
-                        </h2>
+                                Change Password
+
+                            </h2>
+
+                            <p className="text-slate-500">
+
+                                Keep your account secure
+
+                            </p>
+
+                        </div>
 
 
                         <form
@@ -304,7 +620,7 @@ function ProfilePage() {
                                         current_password: e.target.value
                                     })
                                 }
-                                className="w-full border border-slate-300 p-4 rounded-2xl"
+                                className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500"
                             />
 
 
@@ -318,14 +634,28 @@ function ProfilePage() {
                                         new_password: e.target.value
                                     })
                                 }
-                                className="w-full border border-slate-300 p-4 rounded-2xl"
+                                className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500"
+                            />
+
+
+                            <input
+                                type="password"
+                                placeholder="Confirm Password"
+                                value={passwordData.confirm_password}
+                                onChange={(e) =>
+                                    setPasswordData({
+                                        ...passwordData,
+                                        confirm_password: e.target.value
+                                    })
+                                }
+                                className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500"
                             />
 
 
                             <button
                                 type="submit"
                                 disabled={passwordLoading}
-                                className="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-4 rounded-2xl font-semibold shadow-lg"
+                                className="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-4 rounded-2xl font-semibold shadow-lg hover:opacity-90 transition"
                             >
 
                                 {
