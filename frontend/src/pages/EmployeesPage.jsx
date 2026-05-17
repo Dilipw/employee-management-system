@@ -26,7 +26,15 @@ function EmployeesPage() {
 
     const [total, setTotal] = useState(0)
 
+    const [search, setSearch] = useState("")
+
+    const [department, setDepartment] =
+        useState("")
+
     const [editingEmployee, setEditingEmployee] =
+        useState(null)
+
+    const [deleteEmployeeId, setDeleteEmployeeId] =
         useState(null)
 
     const [deleteLoading, setDeleteLoading] =
@@ -35,11 +43,11 @@ function EmployeesPage() {
     const [updateLoading, setUpdateLoading] =
         useState(false)
 
-    const [search, setSearch] = useState("")
-
-    const [department, setDepartment] =
+    const [successMessage, setSuccessMessage] =
         useState("")
 
+
+    // Fetch Employees
     const fetchEmployees =
         async () => {
 
@@ -85,27 +93,30 @@ function EmployeesPage() {
         department
     ])
 
+
+    // Delete Employee
     const handleDelete =
-        async (employeeId) => {
-
-            const confirmDelete =
-                window.confirm(
-                    "Are you sure you want to delete this employee?"
-                )
-
-            if (!confirmDelete) return
+        async () => {
 
             try {
 
                 setDeleteLoading(true)
 
-                await deleteEmployee(employeeId)
+                await deleteEmployee(
+                    deleteEmployeeId
+                )
+
+                setSuccessMessage(
+                    "Employee deleted successfully"
+                )
+
+                setDeleteEmployeeId(null)
 
                 await fetchEmployees()
 
             } catch (error) {
 
-                alert(
+                setError(
                     error.response?.data?.detail
                     || "Delete failed"
                 )
@@ -113,9 +124,17 @@ function EmployeesPage() {
             } finally {
 
                 setDeleteLoading(false)
+
+                setTimeout(() => {
+
+                    setSuccessMessage("")
+
+                }, 3000)
             }
         }
 
+
+    // Update Employee
     const handleUpdate =
         async (e) => {
 
@@ -132,11 +151,15 @@ function EmployeesPage() {
 
                 setEditingEmployee(null)
 
+                setSuccessMessage(
+                    "Employee updated successfully"
+                )
+
                 await fetchEmployees()
 
             } catch (error) {
 
-                alert(
+                setError(
                     error.response?.data?.detail
                     || "Update failed"
                 )
@@ -144,11 +167,36 @@ function EmployeesPage() {
             } finally {
 
                 setUpdateLoading(false)
+
+                setTimeout(() => {
+
+                    setSuccessMessage("")
+
+                }, 3000)
             }
         }
+
+
     return (
 
         <MainLayout>
+
+            {/* Success Popup */}
+            {
+                successMessage && (
+
+                    <div className="fixed top-6 right-6 z-50">
+
+                        <div className="bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl">
+
+                            {successMessage}
+
+                        </div>
+
+                    </div>
+                )
+            }
+
 
             <div className="space-y-8">
 
@@ -173,6 +221,8 @@ function EmployeesPage() {
                     </div>
 
                 </div>
+
+
                 {/* Filters */}
                 <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-6">
 
@@ -252,6 +302,7 @@ function EmployeesPage() {
 
                 </div>
 
+
                 {/* Error */}
                 {
                     error && (
@@ -265,7 +316,7 @@ function EmployeesPage() {
                 }
 
 
-                {/* Table */}
+                {/* Employee Table */}
                 <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
 
 
@@ -303,9 +354,11 @@ function EmployeesPage() {
                                             <th className="text-left p-5 font-semibold text-slate-600">
                                                 Designation
                                             </th>
+
                                             <th className="text-left p-5 font-semibold text-slate-600">
                                                 Actions
                                             </th>
+
                                         </tr>
 
                                     </thead>
@@ -346,6 +399,8 @@ function EmployeesPage() {
                                                             {employee.designation}
 
                                                         </td>
+
+
                                                         <td className="p-5">
 
                                                             <div className="flex gap-3">
@@ -362,10 +417,9 @@ function EmployeesPage() {
 
                                                                 <button
                                                                     onClick={() =>
-                                                                        handleDelete(employee.id)
+                                                                        setDeleteEmployeeId(employee.id)
                                                                     }
-                                                                    disabled={deleteLoading}
-                                                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition disabled:opacity-50"
+                                                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition"
                                                                 >
                                                                     Delete
                                                                 </button>
@@ -373,6 +427,7 @@ function EmployeesPage() {
                                                             </div>
 
                                                         </td>
+
                                                     </tr>
                                                 ))
 
@@ -381,7 +436,7 @@ function EmployeesPage() {
                                                 <tr>
 
                                                     <td
-                                                        colSpan="4"
+                                                        colSpan="5"
                                                         className="p-10 text-center text-slate-500"
                                                     >
 
@@ -479,10 +534,81 @@ function EmployeesPage() {
                 </div>
 
             </div>
+
+
+            {/* Delete Modal */}
+            {
+                deleteEmployeeId && (
+
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-6">
+
+                        <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+
+                            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+
+                                <span className="text-red-500 text-4xl">
+
+                                    !
+
+                                </span>
+
+                            </div>
+
+
+                            <h2 className="text-3xl font-black text-center mb-4">
+
+                                Delete Employee
+
+                            </h2>
+
+                            <p className="text-slate-500 text-center leading-relaxed mb-8">
+
+                                Are you sure you want to delete this employee?
+                                This action cannot be undone.
+
+                            </p>
+
+
+                            <div className="flex gap-4">
+
+                                <button
+                                    onClick={() =>
+                                        setDeleteEmployeeId(null)
+                                    }
+                                    className="flex-1 bg-slate-200 hover:bg-slate-300 transition py-4 rounded-2xl font-semibold"
+                                >
+                                    Cancel
+                                </button>
+
+
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={deleteLoading}
+                                    className="flex-1 bg-gradient-to-r from-red-500 to-pink-600 text-white py-4 rounded-2xl font-semibold shadow-lg"
+                                >
+
+                                    {
+                                        deleteLoading
+                                            ? "Deleting..."
+                                            : "Delete"
+                                    }
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                )
+            }
+
+
+            {/* Update Modal */}
             {
                 editingEmployee && (
 
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-6">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-6">
 
                         <div className="bg-white w-full max-w-xl rounded-3xl p-8 shadow-2xl">
 
@@ -576,6 +702,7 @@ function EmployeesPage() {
                     </div>
                 )
             }
+
         </MainLayout>
     )
 }
