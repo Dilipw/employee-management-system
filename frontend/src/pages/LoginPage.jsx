@@ -72,10 +72,9 @@ function LoginPage() {
             const response =
                 await loginEmployee(formBody)
 
-            login(response.access_token)
+            await login(response.access_token)
 
             navigate("/dashboard")
-
         } catch (error) {
 
             setError(

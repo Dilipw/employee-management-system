@@ -1,102 +1,171 @@
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useState
 } from "react"
+
+import {
+    getLoggedInEmployee
+} from "../services/employeeService"
+
 
 const AuthContext = createContext(null)
 
 
 function AuthProvider({ children }) {
 
-  const [token, setToken] = useState(null)
+    const [token, setToken] = useState(null)
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [user, setUser] = useState(null)
 
-  const [loading, setLoading] = useState(true)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+    const [loading, setLoading] = useState(true)
 
 
-  useEffect(() => {
+    // Initialize Authentication
+    useEffect(() => {
 
-    const storedToken = localStorage.getItem("token")
+        const initializeAuth = async () => {
 
-    if (storedToken) {
+            const storedToken =
+                localStorage.getItem("token")
 
-      setToken(storedToken)
+            // No token found
+            if (!storedToken) {
 
-      setIsAuthenticated(true)
+                setLoading(false)
+
+                return
+            }
+
+            try {
+
+                // Restore token
+                setToken(storedToken)
+
+                // Fetch logged in user
+                const userData =
+                    await getLoggedInEmployee()
+
+                // Store user data
+                setUser(userData)
+
+                // Mark authenticated
+                setIsAuthenticated(true)
+
+            } catch (error) {
+
+                // Invalid token cleanup
+                localStorage.removeItem("token")
+
+                setToken(null)
+
+                setUser(null)
+
+                setIsAuthenticated(false)
+
+            } finally {
+
+                setLoading(false)
+            }
+        }
+
+        initializeAuth()
+
+    }, [])
+
+
+    // Login Function
+    const login = async (newToken) => {
+
+        // Store token
+        localStorage.setItem(
+            "token",
+            newToken
+        )
+
+        setToken(newToken)
+
+        try {
+
+            // Fetch logged in employee
+            const userData =
+                await getLoggedInEmployee()
+
+            // Save user
+            setUser(userData)
+
+            // Update auth state
+            setIsAuthenticated(true)
+
+        } catch (error) {
+
+            // Logout if token invalid
+            logout()
+        }
     }
 
-    setLoading(false)
 
-  }, [])
+    // Logout Function
+    const logout = () => {
+
+        localStorage.removeItem("token")
+
+        setToken(null)
+
+        setUser(null)
+
+        setIsAuthenticated(false)
+    }
 
 
-  const login = (newToken) => {
+    // Shared Context Value
+    const value = useMemo(() => ({
+        token,
+        user,
+        isAuthenticated,
+        loading,
+        login,
+        logout
+    }), [
+        token,
+        user,
+        isAuthenticated,
+        loading
+    ])
 
-    localStorage.setItem(
-      "token",
-      newToken
+
+    return (
+
+        <AuthContext.Provider value={value}>
+
+            {children}
+
+        </AuthContext.Provider>
     )
-
-    setToken(newToken)
-
-    setIsAuthenticated(true)
-  }
-
-
-  const logout = () => {
-
-    localStorage.removeItem("token")
-
-    setToken(null)
-
-    setIsAuthenticated(false)
-  }
-
-
-  const value = useMemo(() => ({
-    token,
-    isAuthenticated,
-    loading,
-    login,
-    logout
-  }), [
-    token,
-    isAuthenticated,
-    loading
-  ])
-
-
-  return (
-
-    <AuthContext.Provider value={value}>
-
-      {children}
-
-    </AuthContext.Provider>
-  )
 }
 
 
+// Custom Hook
 function useAuth() {
 
-  const context = useContext(AuthContext)
+    const context = useContext(AuthContext)
 
-  if (!context) {
+    if (!context) {
 
-    throw new Error(
-      "useAuth must be used inside AuthProvider"
-    )
-  }
+        throw new Error(
+            "useAuth must be used inside AuthProvider"
+        )
+    }
 
-  return context
+    return context
 }
 
 
 export {
-  AuthProvider,
-  useAuth
+    AuthProvider,
+    useAuth
 }

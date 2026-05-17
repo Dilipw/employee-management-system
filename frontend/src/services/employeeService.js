@@ -39,3 +39,13 @@ export const getEmployees = async (
 
   return response.data
 }
+
+export const getLoggedInEmployee =
+  async () => {
+
+    const response = await api.get(
+      "/employees/me"
+    )
+
+    return response.data
+}
