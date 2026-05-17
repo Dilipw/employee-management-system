@@ -203,7 +203,23 @@ function EmployeesPage() {
                 errors.full_name =
                     "Full name is required"
             }
+            // Email Validation
+            if (
+                !editingEmployee.email.trim()
+            ) {
 
+                errors.email =
+                    "Email is required"
+
+            } else if (
+                !/\S+@\S+\.\S+/.test(
+                    editingEmployee.email
+                )
+            ) {
+
+                errors.email =
+                    "Invalid email address"
+            }
             // Phone Validation
             if (
                 !editingEmployee.phone.trim()
@@ -589,11 +605,10 @@ function EmployeesPage() {
 
                                                         <td className="p-5">
 
-                                                            <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                                                                employee.is_active
-                                                                    ? "bg-green-100 text-green-600"
-                                                                    : "bg-red-100 text-red-600"
-                                                            }`}>
+                                                            <span className={`px-4 py-2 rounded-full text-sm font-semibold ${employee.is_active
+                                                                ? "bg-green-100 text-green-600"
+                                                                : "bg-red-100 text-red-600"
+                                                                }`}>
 
                                                                 {
                                                                     employee.is_active
@@ -790,7 +805,12 @@ function EmployeesPage() {
 
                                 {/* Full Name */}
                                 <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
 
+                                        Full Name
+                                        <span className="text-red-500 ml-1">*</span>
+
+                                    </label>
                                     <input
                                         type="text"
                                         placeholder="Full Name"
@@ -816,11 +836,50 @@ function EmployeesPage() {
                                     }
 
                                 </div>
+                                {/* Email */}
+                                <div>
 
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+
+                                        Email Address
+                                        <span className="text-red-500 ml-1">*</span>
+
+                                    </label>
+
+                                    <input
+                                        type="email"
+                                        placeholder="Enter email address"
+                                        value={editingEmployee.email}
+                                        onChange={(e) =>
+                                            setEditingEmployee({
+                                                ...editingEmployee,
+                                                email: e.target.value
+                                            })
+                                        }
+                                        className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
+                                    />
+
+                                    {
+                                        validationErrors.email && (
+
+                                            <p className="text-red-500 text-sm mt-2">
+
+                                                {validationErrors.email}
+
+                                            </p>
+                                        )
+                                    }
+
+                                </div>
 
                                 {/* Phone */}
                                 <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
 
+                                        Phone Number
+                                        <span className="text-red-500 ml-1">*</span>
+
+                                    </label>
                                     <input
                                         type="text"
                                         placeholder="Phone Number"
@@ -850,7 +909,12 @@ function EmployeesPage() {
 
                                 {/* Department */}
                                 <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
 
+                                        Department
+                                        <span className="text-red-500 ml-1">*</span>
+
+                                    </label>
                                     <input
                                         type="text"
                                         placeholder="Department"
@@ -880,7 +944,12 @@ function EmployeesPage() {
 
                                 {/* Designation */}
                                 <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
 
+                                        Designation
+                                        <span className="text-red-500 ml-1">*</span>
+
+                                    </label>
                                     <input
                                         type="text"
                                         placeholder="Designation"
@@ -907,7 +976,12 @@ function EmployeesPage() {
 
                                 </div>
 
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">
 
+                                    Status
+                                    <span className="text-red-500 ml-1">*</span>
+
+                                </label>
                                 {/* Status */}
                                 <select
                                     value={editingEmployee.is_active}
