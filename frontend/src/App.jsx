@@ -11,6 +11,8 @@ import FeaturesPage from "./pages/FeaturesPage"
 import AboutPage from "./pages/AboutPage"
 import EmployeesPage from "./pages/EmployeesPage"
 import ProfilePage from "./pages/ProfilePage"
+import RegisterPage from "./pages/RegisterPage"
+
 
 import Navbar from "./components/common/Navbar"
 
@@ -40,8 +42,8 @@ function App() {
         />
 
         <Route
-          path="/login"
-          element={<LoginPage />}
+          path="/register"
+          element={<RegisterPage />}
         />
 
         <Route
