@@ -25,20 +25,20 @@ class EmployeeBase(BaseModel):
     )
 
     phone: Optional[str] = Field(
-        default=None,
+        ...,
         min_length=10,
         max_length=15,
         description="Employee phone number"
     )
 
     department: Optional[str] = Field(
-        default=None,
+        ...,
         max_length=100,
         description="Employee department"
     )
 
     designation: Optional[str] = Field(
-        default=None,
+        ...,
         max_length=100,
         description="Employee designation"
     )
