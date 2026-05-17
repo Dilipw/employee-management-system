@@ -25,6 +25,7 @@ function ProfilePage() {
     const [profileData, setProfileData] =
         useState({
             full_name: user?.full_name || "",
+            email: user?.email || "",
             phone: user?.phone || "",
             department: user?.department || "",
             designation: user?.designation || ""
@@ -79,7 +80,23 @@ function ProfilePage() {
                 errors.full_name =
                     "Full name is required"
             }
+            // Email Validation
+            if (
+                !profileData.email.trim()
+            ) {
 
+                errors.email =
+                    "Email is required"
+
+            } else if (
+                !/\S+@\S+\.\S+/.test(
+                    profileData.email
+                )
+            ) {
+
+                errors.email =
+                    "Invalid email address"
+            }
             // Phone Validation
             if (
                 !profileData.phone.trim()
@@ -458,7 +475,39 @@ function ProfilePage() {
                                 }
 
                             </div>
+                            {/* Email */}
+                            <div>
 
+                                <label className="block text-sm font-semibold text-slate-600 mb-2">
+
+                                    Email Address
+
+                                </label>
+
+                                <input
+                                    type="email"
+                                    value={profileData.email}
+                                    onChange={(e) =>
+                                        setProfileData({
+                                            ...profileData,
+                                            email: e.target.value
+                                        })
+                                    }
+                                    className="w-full border border-slate-300 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                />
+
+                                {
+                                    validationErrors.email && (
+
+                                        <p className="text-red-500 text-sm mt-2">
+
+                                            {validationErrors.email}
+
+                                        </p>
+                                    )
+                                }
+
+                            </div>
 
                             {/* Phone */}
                             <div>
