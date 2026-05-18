@@ -201,9 +201,14 @@ This will automatically create required tables and sample data.
 Create `.env` file inside backend folder.
 
 ```env
-DATABASE_URL=mysql+pymysql://root:@127.0.0.1:3306/employee_management_db
+# Environment Variables
 
-SECRET_KEY=employee_management_secret_key
+Create `.env` file inside backend folder.
+
+```env
+DATABASE_URL=mysql+pymysql://root:@127.0.0.1/employee_management_db
+
+SECRET_KEY=your_secret_key_here
 
 ALGORITHM=HS256
 
